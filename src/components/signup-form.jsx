@@ -7,11 +7,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 
 export function SignupForm({ className, role = "student", ...props }) {
   const isTeacher = role === "teacher";
   const { toast } = useToast();
+  const router = useRouter();
 
   // State for form inputs
   const [formData, setFormData] = useState({
@@ -108,6 +110,8 @@ export function SignupForm({ className, role = "student", ...props }) {
 
     // Here you would typically call your API to register the user
     console.log("Form submitted:", formData);
+
+    router.push(`/onboarding?role=${role}`);
   };
 
   // Handle blur events for real-time validation
