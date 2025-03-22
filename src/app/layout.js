@@ -1,5 +1,11 @@
-import { Geist, Geist_Mono, Bricolage_Grotesque } from "next/font/google";
+import {
+  Geist,
+  Geist_Mono,
+  Bricolage_Grotesque,
+  Manrope,
+} from "next/font/google";
 import "./globals.css";
+import { Toaster } from "@/components/ui/toaster";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,6 +22,11 @@ const bricolageGrotesque = Bricolage_Grotesque({
   subsets: ["latin"],
 });
 
+const manrope = Manrope({
+  variable: "--font-manrope",
+  subsets: ["latin"],
+});
+
 export const metadata = {
   title: "Nexus - AI-Powered Private Doubt Resolution System",
   description:
@@ -25,7 +36,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${bricolageGrotesque.variable} antialiased`}
+        className={`${geistSans.variable} ${manrope.variable} antialiased font-sans`}
         suppressHydrationWarning
         suppressContentEditableWarning
       >
@@ -34,9 +45,9 @@ export default function RootLayout({ children }) {
           id="background"
           src="/background.svg"
           alt=""
-          fetchpriority="high"
-          className=" opacity-50 invert"
-        />
+          className=" opacity-50 dark:opacity-90 "
+        />{" "}
+        <Toaster />
       </body>
     </html>
   );
