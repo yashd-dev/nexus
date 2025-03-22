@@ -20,6 +20,13 @@ export function SignupForm({ className, role = "student", ...props }) {
     password: "",
   });
 
+  // State for validation errors
+  const [errors, setErrors] = useState({
+    name: "",
+    email: "",
+    password: "",
+  });
+
   // Handle input changes
   const handleChange = (e) => {
     const { id, value } = e.target;
@@ -27,17 +34,65 @@ export function SignupForm({ className, role = "student", ...props }) {
       ...prev,
       [id]: value,
     }));
+
+    // Clear the error when user starts typing again
+    if (errors[id]) {
+      setErrors((prev) => ({
+        ...prev,
+        [id]: "",
+      }));
+    }
+  };
+
+  // Validation functions with regex
+  const validateName = (name) => {
+    const nameRegex = /^[a-zA-Z]+(([',. -][a-zA-Z ])?[a-zA-Z]*)*$/;
+    if (!name) return "Name is required";
+    if (!nameRegex.test(name)) return "Please enter a valid name";
+    if (name.length < 2) return "Name must be at least 2 characters";
+    return "";
+  };
+
+  const validateEmail = (email) => {
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!email) return "Email is required";
+    if (!emailRegex.test(email)) return "Please enter a valid email address";
+    return "";
+  };
+
+  const validatePassword = (password) => {
+    // Requires at least 8 characters, one uppercase, one lowercase, one number
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+    if (!password) return "Password is required";
+    if (!passwordRegex.test(password))
+      return "Password must be at least 8 characters with uppercase, lowercase, and number";
+    return "";
+  };
+
+  // Validate all fields
+  const validateForm = () => {
+    const nameError = validateName(formData.name);
+    const emailError = validateEmail(formData.email);
+    const passwordError = validatePassword(formData.password);
+
+    setErrors({
+      name: nameError,
+      email: emailError,
+      password: passwordError,
+    });
+
+    return !nameError && !emailError && !passwordError;
   };
 
   // Handle form submission
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Basic validation
-    if (!formData.name || !formData.email || !formData.password) {
+    // Validate all fields
+    if (!validateForm()) {
       toast({
-        title: "Error",
-        description: "Please fill in all required fields.",
+        title: "Validation Error",
+        description: "Please fix the errors in the form",
         variant: "destructive",
       });
       return;
@@ -53,6 +108,31 @@ export function SignupForm({ className, role = "student", ...props }) {
 
     // Here you would typically call your API to register the user
     console.log("Form submitted:", formData);
+  };
+
+  // Handle blur events for real-time validation
+  const handleBlur = (e) => {
+    const { id, value } = e.target;
+    let error = "";
+
+    switch (id) {
+      case "name":
+        error = validateName(value);
+        break;
+      case "email":
+        error = validateEmail(value);
+        break;
+      case "password":
+        error = validatePassword(value);
+        break;
+      default:
+        break;
+    }
+
+    setErrors((prev) => ({
+      ...prev,
+      [id]: error,
+    }));
   };
 
   return (
@@ -78,8 +158,13 @@ export function SignupForm({ className, role = "student", ...props }) {
                   placeholder="John Doe"
                   value={formData.name}
                   onChange={handleChange}
+                  onBlur={handleBlur}
+                  className={errors.name ? "border-red-500" : ""}
                   required
                 />
+                {errors.name && (
+                  <p className="text-sm text-red-500">{errors.name}</p>
+                )}
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
@@ -89,8 +174,13 @@ export function SignupForm({ className, role = "student", ...props }) {
                   placeholder="m@example.com"
                   value={formData.email}
                   onChange={handleChange}
+                  onBlur={handleBlur}
+                  className={errors.email ? "border-red-500" : ""}
                   required
                 />
+                {errors.email && (
+                  <p className="text-sm text-red-500">{errors.email}</p>
+                )}
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="password">Password</Label>
@@ -99,8 +189,18 @@ export function SignupForm({ className, role = "student", ...props }) {
                   type="password"
                   value={formData.password}
                   onChange={handleChange}
+                  onBlur={handleBlur}
+                  className={errors.password ? "border-red-500" : ""}
                   required
                 />
+                {errors.password && (
+                  <p className="text-sm text-red-500">{errors.password}</p>
+                )}
+                {!errors.password && formData.password && (
+                  <p className="text-sm text-green-500">
+                    Password meets requirements
+                  </p>
+                )}
               </div>
               <Button type="submit" className="w-full">
                 Create Account

@@ -37,13 +37,13 @@ function Navigation({ mobileMenuOpen, setMobileMenuOpen }) {
       </div>
       <div className="flex items-center space-x-3">
         <Link
-          href="/login"
+          href="/access-account"
           className="text-gray-600 hover:text-black hidden sm:block"
         >
           Log in
         </Link>
         <Link
-          href="/signup"
+          href="/access-account"
           className="bg-black text-white px-4 py-2 rounded-md hover:bg-gray-800 hidden sm:block"
         >
           Sign up
@@ -155,13 +155,13 @@ function HeroSection() {
 
       <div className="flex flex-col sm:flex-row justify-center gap-4 mb-8 sm:mb-12">
         <Link
-          href="/signup"
+          href="/access-account"
           className="bg-black text-white px-6 py-3 rounded-md hover:bg-gray-800 font-medium"
         >
           Start for free
         </Link>
         <Link
-          href="/demo"
+          href="/access-account"
           className="border border-gray-300 px-6 py-3 rounded-md hover:border-gray-500 font-medium"
         >
           Get a demo
@@ -394,18 +394,13 @@ function Footer() {
   return (
     <footer className="border-t border-foreground-muted py-12">
       <div className="max-w-6xl mx-auto px-4">
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-8">
           <FooterColumn title="Product">
             <FooterLink href="#" text="Features" />
             <FooterLink href="#" text="Pricing" />
             <FooterLink href="#" text="Enterprise" />
           </FooterColumn>
 
-          <FooterColumn title="Resources">
-            <FooterLink href="#" text="Blog" />
-            <FooterLink href="#" text="Documentation" />
-            <FooterLink href="#" text="Support" />
-          </FooterColumn>
 
           <FooterColumn title="Company">
             <FooterLink href="#" text="About" />
@@ -414,9 +409,9 @@ function Footer() {
           </FooterColumn>
 
           <FooterColumn title="Legal" className="sm:col-span-2 md:col-span-1">
-            <FooterLink href="#" text="Privacy" />
-            <FooterLink href="#" text="Terms" />
-            <FooterLink href="#" text="Security" />
+            <FooterLink href="/privacy" text="Privacy" />
+            <FooterLink href="/tos" text="Terms" />
+            <FooterLink href="/security" text="Security" />
           </FooterColumn>
 
           <div className="col-span-2 sm:col-span-3 md:col-span-1 mt-8 md:mt-0">
@@ -478,7 +473,7 @@ export default function Home() {
   ];
 
   return (
-    <main className="font-sans lowercase">
+    <main className="font-sans">
       <Navigation
         mobileMenuOpen={mobileMenuOpen}
         setMobileMenuOpen={setMobileMenuOpen}
