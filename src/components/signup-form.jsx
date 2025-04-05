@@ -46,7 +46,10 @@ export function SignupForm({ className, role = "student", ...props }) {
       }));
     }
   };
-
+  const handleGithubSignup = () => {
+    window.location.href = "http://127.0.0.1:5000/api/signup/github";
+  };
+  
   // Validation functions with regex
   const validateName = (name) => {
     const nameRegex = /^[a-zA-Z]+(([',. -][a-zA-Z ])?[a-zA-Z]*)*$/;
@@ -245,7 +248,7 @@ export function SignupForm({ className, role = "student", ...props }) {
                 </span>
               </div>
               <div className="grid-cols-3 items-center justify-center gap-4 flex">
-              <Button variant="outline" className="w-full flex justify-center items-center ">
+              <Button variant="outline" className="w-full flex justify-center items-center" type="button" onClick={handleGithubSignup}>
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
                         <path
                             d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.26.82-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.385-1.334-1.756-1.334-1.756-1.089-.744.083-.729.083-.729 1.205.085 1.84 1.236 1.84 1.236 1.07 1.835 2.809 1.304 3.495.997.108-.775.418-1.304.76-1.605-2.665-.304-5.467-1.332-5.467-5.93 0-1.31.468-2.38 1.235-3.22-.135-.303-.54-1.522.105-3.176 0 0 1.005-.322 3.3 1.23a11.493 11.493 0 0 1 3.003-.403c1.02.005 2.045.137 3.003.403 2.292-1.552 3.295-1.23 3.295-1.23.648 1.654.243 2.873.12 3.176.77.84 1.23 1.91 1.23 3.22 0 4.61-2.807 5.623-5.48 5.921.43.372.812 1.103.812 2.222v3.293c0 .322.218.698.825.577 4.765-1.585 8.2-6.082 8.2-11.385 0-6.627-5.373-12-12-12z"
