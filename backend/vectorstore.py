@@ -93,13 +93,26 @@ def ask_question():
             return jsonify({"error": "Missing 'query' in request body"}), 400
 
         user_query = data['query']
+        query=data['query']
+        existing = supabase.table("Answers").select("*").eq("query", query).execute()
+        if existing.data:
+            return jsonify({
+                "msg": "Answer already exists",
+                "answer": existing.data[0]["answers"]
+            }), 200
+            
+        supabase.table("Answers").insert({"query": user_query}).execute()
         context_data = fetch_relevant_content()
         context_text = "\n".join(context_data)
+        
 
         warnings.filterwarnings("ignore")
         response = model.generate_content(make_prompt(user_query, context_text))
+        answers_text=response.text.strip()
+        supabase.table("Answers").insert({"query":user_query,"answers":answers_text}).execute()
 
         return jsonify({"answer": response.text})
+
 
     except Exception as e:
         traceback.print_exc()
