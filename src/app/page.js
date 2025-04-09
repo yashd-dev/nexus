@@ -11,7 +11,7 @@ import {
 import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-// Navigation Component
+
 function Navigation({ mobileMenuOpen, setMobileMenuOpen }) {
   return (
     <nav className="flex items-center justify-between max-w-6xl mx-auto px-4 py-6">
@@ -63,7 +63,7 @@ function Navigation({ mobileMenuOpen, setMobileMenuOpen }) {
   );
 }
 
-// Mobile Menu Component
+
 function MobileMenu({ mobileMenuOpen, setMobileMenuOpen }) {
   if (!mobileMenuOpen) return null;
 
@@ -136,7 +136,7 @@ function MobileMenu({ mobileMenuOpen, setMobileMenuOpen }) {
   );
 }
 
-// Hero Section Component
+
 function HeroSection() {
   return (
     <div className="max-w-6xl mx-auto px-4 pt-16 sm:pt-24 pb-12 sm:pb-20 text-center">
@@ -177,7 +177,7 @@ function HeroSection() {
   );
 }
 
-// Demo Input Component
+
 function DemoInput() {
   return (
     <div className="max-w-2xl mx-auto mb-16 sm:mb-24 border border-gray-200 rounded-lg overflow-hidden">
@@ -230,7 +230,7 @@ function DemoInput() {
   );
 }
 
-// University Logos Component
+
 function UniversityLogos({ universities }) {
   return (
     <div className="border-t border-gray-200 py-12">
@@ -257,7 +257,7 @@ function UniversityLogos({ universities }) {
   );
 }
 
-// Features Section Component
+
 function FeaturesSection() {
   return (
     <div className="py-16 sm:py-24">
@@ -350,7 +350,7 @@ function FeaturesSection() {
   );
 }
 
-// Feature Card Component
+
 function FeatureCard({ title, description, demo }) {
   return (
     <div className="bg-card p-6 sm:p-8 rounded-lg border border-muted">
@@ -361,7 +361,7 @@ function FeatureCard({ title, description, demo }) {
   );
 }
 
-// CTA Section Component
+
 function CTASection() {
   return (
     <div className="py-16 sm:py-24 max-w-6xl mx-auto px-4 text-center">
@@ -389,7 +389,7 @@ function CTASection() {
   );
 }
 
-// Footer Component
+
 function Footer() {
   return (
     <footer className="border-t border-foreground-muted py-12">
@@ -424,7 +424,7 @@ function Footer() {
   );
 }
 
-// Footer Column Component
+
 function FooterColumn({ title, children, className = "" }) {
   return (
     <div className={className}>
@@ -434,7 +434,7 @@ function FooterColumn({ title, children, className = "" }) {
   );
 }
 
-// Footer Link Component
+
 function FooterLink({ href, text }) {
   return (
     <li>
@@ -445,7 +445,7 @@ function FooterLink({ href, text }) {
   );
 }
 
-// Main Component
+
 export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 

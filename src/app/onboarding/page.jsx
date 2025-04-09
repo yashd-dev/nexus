@@ -33,28 +33,37 @@ export default function OnboardingPage() {
   const [generatedInviteLink, setGeneratedInviteLink] = useState("");
   const { toast } = useToast();
 
-  // Simulate fetching user data
+  
   useEffect(() => {
-    // This would be replaced with actual API call to get user data
+    
     const mockUserData = {
       name: role === "teacher" ? "Ms. Johnson" : "Alex",
     };
-    setName(mockUserData.name);
+    const user = sessionStorage.getItem("user");
+    if (user == null) {
+      window.location.href = "/access-account";
+    }
+    let usser = JSON.parse(user);
+    setName(usser.name);
+
+    if (role != usser.role) {
+      router.push(`/onboarding?role=${usser.role}`);
+    }
   }, [role]);
 
   const handleCreateGroup = (e) => {
     e.preventDefault();
-    // Generate a mock invite link
+    
     const mockInviteLink = `app.classroom.ai/join/${Math.random()
       .toString(36)
       .substring(2, 10)}`;
     setGeneratedInviteLink(mockInviteLink);
-    // In a real app, you would save the group to the database here
+    
   };
 
   const handleJoinGroup = (e) => {
     e.preventDefault();
-    // In a real app, you would validate the invite link and join the group
+    
     setJoinGroupOpen(false);
     router.push("/chat");
   };
@@ -65,7 +74,7 @@ export default function OnboardingPage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      {/* Progress indicator */}
+      
       <div className="container mx-auto px-4 py-6">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center space-x-2">
@@ -113,7 +122,7 @@ export default function OnboardingPage() {
         </div>
       </div>
 
-      {/* Main content */}
+      
       <div className="flex-1 container mx-auto px-4 py-6">
         <Card className="border-none shadow-lg">
           <CardContent className="p-0">
@@ -128,7 +137,7 @@ export default function OnboardingPage() {
             <div className="border  border-muted"></div>
 
             <div className="p-8">
-              {/* Teacher onboarding */}
+              
               {role === "teacher" && (
                 <div className="space-y-8">
                   <div className="grid gap-8 md:grid-cols-2">
@@ -194,7 +203,7 @@ export default function OnboardingPage() {
                 </div>
               )}
 
-              {/* Student onboarding */}
+              
               {role === "student" && (
                 <div className="space-y-8">
                   <div className="grid gap-8 md:grid-cols-2">
@@ -261,7 +270,7 @@ export default function OnboardingPage() {
         </Card>
       </div>
 
-      {/* Create Group Dialog */}
+      
       <Dialog open={createGroupOpen} onOpenChange={setCreateGroupOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
@@ -337,7 +346,7 @@ export default function OnboardingPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Join Group Dialog */}
+      
       <Dialog open={joinGroupOpen} onOpenChange={setJoinGroupOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
@@ -359,7 +368,7 @@ export default function OnboardingPage() {
                     <Label htmlFor="invite-link">Invite Link</Label>
                     <Input
                       id="invite-link"
-                      placeholder="https://app.classroom.ai/join/abc123"
+                      placeholder="https:
                       value={inviteLink}
                       onChange={(e) => setInviteLink(e.target.value)}
                       required

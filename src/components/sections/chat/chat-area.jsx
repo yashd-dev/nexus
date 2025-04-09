@@ -45,7 +45,6 @@ export function ChatArea({ selectedGroup }) {
     setNewMessage("");
   };
 
-  // Scroll to bottom whenever messages change
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
@@ -71,16 +70,13 @@ export function ChatArea({ selectedGroup }) {
 
   return (
     <div className="flex-1 flex flex-col h-full">
-      {/* Header */}
       <div className="border-b p-4 flex justify-between items-center">
         <div>
           <h1 className="text-xl font-semibold">{selectedGroup.name}</h1>
         </div>
       </div>
 
-      {/* Main content area with group info and chat */}
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
-        {/* Chat messages */}
         <div className="flex-1 flex flex-col h-full">
           <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
             <div className="space-y-4 max-w-4xl mx-auto">
@@ -109,12 +105,10 @@ export function ChatArea({ selectedGroup }) {
                   </div>
                 </div>
               ))}
-              {/* This empty div is used as a reference for scrolling to the bottom */}
               <div ref={messagesEndRef} />{" "}
             </div>
           </ScrollArea>
 
-          {/* Message input */}
           <div className="p-4 border-t">
             <div className="flex gap-2">
               <Button variant="outline" size="icon" className="shrink-0">
@@ -142,7 +136,6 @@ export function ChatArea({ selectedGroup }) {
           </div>
         </div>
 
-        {/* Group info sidebar */}
         <div className="w-full md:w-80 border-l bg-muted/20 p-4 overflow-auto">
           <div className="space-y-6">
             <div>

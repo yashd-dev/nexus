@@ -4,7 +4,7 @@ import { ArrowLeft } from "lucide-react";
 export default function Terms() {
   return (
     <main className="font-sans">
-      {/* Navigation */}
+      
       <nav className="flex items-center justify-between max-w-6xl mx-auto px-4 py-6 border-b border-gray-200">
         <div className="flex items-center">
           <Link href="/" className="text-2xl font-bold">
@@ -22,7 +22,7 @@ export default function Terms() {
         </div>
       </nav>
 
-      {/* Content */}
+      
       <div className="max-w-3xl mx-auto px-4 py-12">
         <h1 className="text-3xl sm:text-4xl font-bold mb-8">
           Terms of Service
@@ -217,7 +217,7 @@ export default function Terms() {
         </div>
       </div>
 
-      {/* Footer */}
+      
       <footer className="border-t border-gray-200 py-8">
         <div className="max-w-6xl mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center">

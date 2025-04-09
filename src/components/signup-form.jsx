@@ -15,21 +15,24 @@ export function SignupForm({ className, role = "student", ...props }) {
   const { toast } = useToast();
   const router = useRouter();
 
-  // State for form inputs
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
+    role: role,
+    semester: isTeacher ? null : 1,
+    is_available: isTeacher ? true : null,
   });
 
-  // State for validation errors
   const [errors, setErrors] = useState({
     name: "",
     email: "",
     password: "",
   });
 
-  // Handle input changes
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [apiError, setApiError] = useState("");
+
   const handleChange = (e) => {
     const { id, value } = e.target;
     setFormData((prev) => ({
@@ -37,16 +40,18 @@ export function SignupForm({ className, role = "student", ...props }) {
       [id]: value,
     }));
 
-    // Clear the error when user starts typing again
     if (errors[id]) {
       setErrors((prev) => ({
         ...prev,
         [id]: "",
       }));
     }
+
+    if (apiError) {
+      setApiError("");
+    }
   };
 
-  // Validation functions with regex
   const validateName = (name) => {
     const nameRegex = /^[a-zA-Z]+(([',. -][a-zA-Z ])?[a-zA-Z]*)*$/;
     if (!name) return "Name is required";
@@ -63,7 +68,6 @@ export function SignupForm({ className, role = "student", ...props }) {
   };
 
   const validatePassword = (password) => {
-    // Requires at least 8 characters, one uppercase, one lowercase, one number
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
     if (!password) return "Password is required";
     if (!passwordRegex.test(password))
@@ -71,7 +75,6 @@ export function SignupForm({ className, role = "student", ...props }) {
     return "";
   };
 
-  // Validate all fields
   const validateForm = () => {
     const nameError = validateName(formData.name);
     const emailError = validateEmail(formData.email);
@@ -86,11 +89,9 @@ export function SignupForm({ className, role = "student", ...props }) {
     return !nameError && !emailError && !passwordError;
   };
 
-  // Handle form submission
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate all fields
     if (!validateForm()) {
       toast({
         title: "Validation Error",
@@ -100,21 +101,55 @@ export function SignupForm({ className, role = "student", ...props }) {
       return;
     }
 
-    // Show success toast
-    toast({
-      title: "Account created!",
-      description: `${
-        isTeacher ? "Teacher" : "Student"
-      } account created successfully for ${formData.email}`,
-    });
+    setIsSubmitting(true);
+    setApiError("");
 
-    // Here you would typically call your API to register the user
-    console.log("Form submitted:", formData);
+    try {
+      const response = await fetch("http://localhost:5000/api/auth/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
 
-    router.push(`/onboarding?role=${role}`);
+      const data = await response.json();
+      sessionStorage.setItem("user", JSON.stringify(data.user));
+      sessionStorage.setItem("accessToken", data.accessToken);
+      if (!response.ok) {
+        if (data.errors && Array.isArray(data.errors)) {
+          const newErrors = { ...errors };
+          data.errors.forEach((error) => {
+            if (error.field && newErrors.hasOwnProperty(error.field)) {
+              newErrors[error.field] = error.message;
+            }
+          });
+          setErrors(newErrors);
+        }
+
+        throw new Error(data.message || "Failed to create account");
+      }
+
+      toast({
+        title: "Account created!",
+        description: `${
+          isTeacher ? "Teacher" : "Student"
+        } account created successfully for ${formData.email}`,
+      });
+
+      router.push(`/onboarding?role=${role}`);
+    } catch (error) {
+      setApiError(error.message);
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  // Handle blur events for real-time validation
   const handleBlur = (e) => {
     const { id, value } = e.target;
     let error = "";
@@ -154,6 +189,11 @@ export function SignupForm({ className, role = "student", ...props }) {
                   Sign up for your {isTeacher ? "educator" : "student"} account
                 </p>
               </div>
+              {apiError && (
+                <div className="p-3 text-sm text-white bg-red-500 rounded-md">
+                  {apiError}
+                </div>
+              )}
               <div className="grid gap-2">
                 <Label htmlFor="name">Full Name</Label>
                 <Input
@@ -165,6 +205,7 @@ export function SignupForm({ className, role = "student", ...props }) {
                   onBlur={handleBlur}
                   className={errors.name ? "border-red-500" : ""}
                   required
+                  disabled={isSubmitting}
                 />
                 {errors.name && (
                   <p className="text-sm text-red-500">{errors.name}</p>
@@ -181,6 +222,7 @@ export function SignupForm({ className, role = "student", ...props }) {
                   onBlur={handleBlur}
                   className={errors.email ? "border-red-500" : ""}
                   required
+                  disabled={isSubmitting}
                 />
                 {errors.email && (
                   <p className="text-sm text-red-500">{errors.email}</p>
@@ -196,6 +238,7 @@ export function SignupForm({ className, role = "student", ...props }) {
                   onBlur={handleBlur}
                   className={errors.password ? "border-red-500" : ""}
                   required
+                  disabled={isSubmitting}
                 />
                 {errors.password && (
                   <p className="text-sm text-red-500">{errors.password}</p>
@@ -206,22 +249,31 @@ export function SignupForm({ className, role = "student", ...props }) {
                   </p>
                 )}
               </div>
-              <Button type="submit" className="w-full">
-                Create Account
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
+                {isSubmitting ? "Creating Account..." : "Create Account"}
               </Button>
               <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border">
                 <span className="relative z-10 bg-background px-2 text-muted-foreground">
                   Or continue with
                 </span>
               </div>
-              <div className=" grid-cols-3 items-center justify-center gap-4 flex">
-                <Button variant="outline" className="w-full flex justify-center items-center ">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-                        <path
-                            d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.26.82-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.385-1.334-1.756-1.334-1.756-1.089-.744.083-.729.083-.729 1.205.085 1.84 1.236 1.84 1.236 1.07 1.835 2.809 1.304 3.495.997.108-.775.418-1.304.76-1.605-2.665-.304-5.467-1.332-5.467-5.93 0-1.31.468-2.38 1.235-3.22-.135-.303-.54-1.522.105-3.176 0 0 1.005-.322 3.3 1.23a11.493 11.493 0 0 1 3.003-.403c1.02.005 2.045.137 3.003.403 2.292-1.552 3.295-1.23 3.295-1.23.648 1.654.243 2.873.12 3.176.77.84 1.23 1.91 1.23 3.22 0 4.61-2.807 5.623-5.48 5.921.43.372.812 1.103.812 2.222v3.293c0 .322.218.698.825.577 4.765-1.585 8.2-6.082 8.2-11.385 0-6.627-5.373-12-12-12z"
-                            fill="currentColor"
-                          />
-                    </svg>
+              <div className="flex items-center justify-center gap-4">
+                <Button
+                  variant="outline"
+                  className="w-full flex justify-center items-center"
+                  disabled={isSubmitting}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    width="24"
+                    height="24"
+                  >
+                    <path
+                      d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.26.82-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.385-1.334-1.756-1.334-1.756-1.089-.744.083-.729.083-.729 1.205.085 1.84 1.236 1.84 1.236 1.07 1.835 2.809 1.304 3.495.997.108-.775.418-1.304.76-1.605-2.665-.304-5.467-1.332-5.467-5.93 0-1.31.468-2.38 1.235-3.22-.135-.303-.54-1.522.105-3.176 0 0 1.005-.322 3.3 1.23a11.493 11.493 0 0 1 3.003-.403c1.02.005 2.045.137 3.003.403 2.292-1.552 3.295-1.23 3.295-1.23.648 1.654.243 2.873.12 3.176.77.84 1.23 1.91 1.23 3.22 0 4.61-2.807 5.623-5.48 5.921.43.372.812 1.103.812 2.222v3.293c0 .322.218.698.825.577 4.765-1.585 8.2-6.082 8.2-11.385 0-6.627-5.373-12-12-12z"
+                      fill="currentColor"
+                    />
+                  </svg>
                   <span className="sr-only">Login with GitHub</span>
                 </Button>
               </div>
