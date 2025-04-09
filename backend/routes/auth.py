@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, current_app, session
+from flask import Blueprint, request, jsonify, current_app
 import uuid
 import bcrypt
 import re
@@ -263,6 +263,7 @@ def login():
 
         user_id = user_data["id"]
         role = user_data["role"]
+        additional_data = {}
 
         
         if role == "student":
@@ -279,8 +280,7 @@ def login():
         else:
             additional_data = {}
 
-        session["user_id"] = user_id  
-        session["role"] = role
+       
 
         user_data.pop("password_hash", None)  
 
