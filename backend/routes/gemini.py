@@ -9,17 +9,22 @@ from werkzeug.utils import secure_filename
 from unstructured.partition.pdf import partition_pdf
 from supabase import create_client
 import google.generativeai as genai
+import pytesseract  # OCR tool
+import PIL
 
 # Load environment variables
 load_dotenv()
-
+ocr_agent = pytesseract.image_to_string 
 gemini_bp = Blueprint("gemini", __name__)
 
 def setup_gemini():
     """Sets up Google Gemini API. Returns a generative model."""
-    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+    GEMINI_API_KEY = 'AIzaSyDfoT122mIYJohK9n1X_gXyaLB6uLp0CZg'
+    
+    # Ensure the GEMINI_API_KEY is set properly
     if not GEMINI_API_KEY:
         raise ValueError("GEMINI_API_KEY environment variable must be set.")
+    
     genai.configure(api_key=GEMINI_API_KEY)
     return genai.GenerativeModel(model_name="gemini-1.5-flash")
 
@@ -50,7 +55,7 @@ def store_content_and_embeddings(file_path, supabase, group_id, sender_id, sende
                         "id": message_id,
                         "group_id": group_id,
                         "sender_id": sender_id,
-                        "sender_role": sender_role,
+                        "sender_role": "ai",
                         "content": content,
                         "embedding": embedding,
                     }).execute()
@@ -80,7 +85,7 @@ def generate_ai_response(user_query, context_text, supabase, group_id, user_id):
     response = model.generate_content(prompt)
     answer_text = response.text.strip()
 
-    ai_user_id = "AI"
+    ai_user_id = user_id
     message_id = str(uuid.uuid4())
 
     # Store AI response in messages
@@ -173,7 +178,18 @@ def ask_question():
         # Generate and return AI answer
         ai_response = generate_ai_response(user_query, context_text, supabase, group_id, user_id)
         return jsonify({"answer": ai_response})
-
+    
     except Exception as e:
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
+
+# OCR function for extracting text from images
+def extract_text_from_image(file_path):
+    """Extracts text from an image using OCR."""
+    try:
+        img = Image.open(file_path)
+        text = pytesseract.image_to_string(img)  # Use the OCR agent here
+        return text
+    except Exception as e:
+        print(f"Error extracting text: {e}")
+        return None
