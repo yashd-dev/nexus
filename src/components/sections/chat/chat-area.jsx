@@ -159,9 +159,11 @@ export function ChatArea({ selectedGroup }) {
 
   const handleAvatarClick = async (otherUserId) => {
     if (otherUserId === currentUserId) {
+      // Don't do anything if it is yourself.
       return;
     }
     try {
+      // 1. Check if a personal group already exists
       const checkResponse = await fetch(
         "http://localhost:5000/api/groups/check-personal-group",
         {
@@ -181,20 +183,31 @@ export function ChatArea({ selectedGroup }) {
       }
 
       const checkData = await checkResponse.json();
-      
 
       if (checkData.exists) {
+        // 2. If group exists, redirect to it
         router.push(`/group/${checkData.group_id}`);
       } else {
-        console.log(
-          JSON.stringify({
-            user_id: currentUserId,
-            other_user_id: otherUserId,
-            subject_name: "Direct Message",
-            group_type: "personal",
-            semester_id: selectedGroup ? selectedGroup.semester_id : null,
-          })
-        );
+        // 3. Fetch semester ID
+        let semesterId = null;
+        if (selectedGroup) {
+          try {
+            const semesterResponse = await fetch(
+              `http://localhost:5000/api/semesters/${selectedGroup.id}`
+            );
+            if (!semesterResponse.ok) {
+              throw new Error("Failed to fetch semester ID");
+            }
+            const semesterData = await semesterResponse.json();
+            semesterId = semesterData.id; // Assuming your endpoint returns { id: "semester-id", ... }
+          } catch (err) {
+            console.error("Error fetching semester ID:", err);
+            setError(err.message); // Handle the error appropriately
+            return; // Exit if semester ID cannot be fetched
+          }
+        }
+
+        // 4. Create a new one and redirect
         const createResponse = await fetch(
           "http://localhost:5000/api/groups/create",
           {
@@ -203,11 +216,11 @@ export function ChatArea({ selectedGroup }) {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              user_id: currentUserId,
-              other_user_id: otherUserId,
+              user_id: currentUserId, // ID of the user initiating the chat
+              other_user_id: otherUserId, // ID of the user whose avatar was clicked
               group_type: "personal",
-              subject_name: "Direct Message",
-              semester_id: selectedGroup ? selectedGroup.semester_id : null,
+              subject_name: "Direct Message", // Or some other name
+              semester_id: semesterId,
             }),
           }
         );

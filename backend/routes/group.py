@@ -6,64 +6,19 @@ from urllib.parse import quote
 group_bp = Blueprint("groups", __name__)
 
 
-from flask import Blueprint, request, jsonify, current_app
-import uuid
-
-group_bp = Blueprint("groups", __name__)
-
-
-@group_bp.route("/check-personal-group", methods=["POST"])
-def check_personal_group():
-    supabase = current_app.config["supabase_client"]
-    try:
-        data = request.get_json()
-        user_id = data.get("user_id")  
-        other_user_id = data.get("other_user_id") 
-
-        if not all([user_id, other_user_id]):
-            return jsonify({"error": "Missing user_id and other_user_id"}), 400
-
-        group_response = supabase.table("groups").select("id").eq("group_type", "personal").execute()
-        if not group_response.data:
-            return jsonify({"exists": False}), 200
-
-        group_list = group_response.data
-        for group_item in group_list:
-            group_id = group_item["id"]
-            user_response = (
-                supabase.table("group_members")
-                .select("student_id")
-                .eq("group_id", group_id)
-                .execute()
-            )
-            if not user_response.data:
-                return jsonify({"exists": False}), 200
-            member_list = user_response.data
-
-            for member_item in member_list:
-                member_id = member_item["student_id"]
-                if other_user_id == member_id:
-                    return jsonify({"exists": True, "group_id": group_id}), 200
-
-        return jsonify({"exists": False}), 200
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
 @group_bp.route("/create", methods=["POST"])
 def create_group():
     supabase = current_app.config["supabase_client"]
     try:
         data = request.get_json()
-        user_id = data.get("user_id")  # ID of the user initiating the chat
-        other_user_id = data.get("other_user_id")  # ID of the user whose avatar was clicked
+        user_id = data.get("user_id")  # frontend sends user_id
         semester_id = data.get("semester_id")
         group_type = data.get("group_type")
         subject_name = data.get("subject_name")
 
-        if not all([user_id, semester_id, group_type, subject_name, other_user_id]):
+        if not all([user_id, semester_id, group_type, subject_name]):
             return jsonify({
-                "error": "Missing user_id, other_user_id, semester_id, group_type, and subject_name are required",
+                "error": "Missing user_id, semester_id, group_type, and subject_name are required",
             }), 400
 
         if group_type not in ("group", "personal"):
@@ -90,10 +45,6 @@ def create_group():
         supabase.table("groups").insert(group_data).execute()
 
         join_link = f"/api/groups/join/{group_id}"
-
-        # Student also joins this group
-        supabase.table("group_members").insert({"group_id": group_id, "student_id": other_user_id}).execute()
-
 
         return jsonify({"message": "Group created", "group_id": group_id, "join_link": join_link}), 201
 
