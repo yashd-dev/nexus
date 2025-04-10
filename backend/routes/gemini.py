@@ -9,17 +9,22 @@ from werkzeug.utils import secure_filename
 from unstructured.partition.pdf import partition_pdf
 from supabase import create_client
 import google.generativeai as genai
+import pytesseract  # OCR tool
+import PIL
 
 # Load environment variables
 load_dotenv()
-
+ocr_agent = pytesseract.image_to_string 
 gemini_bp = Blueprint("gemini", __name__)
 
 def setup_gemini():
     """Sets up Google Gemini API. Returns a generative model."""
     GEMINI_API_KEY = 'AIzaSyDfoT122mIYJohK9n1X_gXyaLB6uLp0CZg'
+    
+    # Ensure the GEMINI_API_KEY is set properly
     if not GEMINI_API_KEY:
         raise ValueError("GEMINI_API_KEY environment variable must be set.")
+    
     genai.configure(api_key=GEMINI_API_KEY)
     return genai.GenerativeModel(model_name="gemini-1.5-flash")
 
@@ -177,3 +182,14 @@ def ask_question():
     except Exception as e:
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
+
+# OCR function for extracting text from images
+def extract_text_from_image(file_path):
+    """Extracts text from an image using OCR."""
+    try:
+        img = Image.open(file_path)
+        text = pytesseract.image_to_string(img)  # Use the OCR agent here
+        return text
+    except Exception as e:
+        print(f"Error extracting text: {e}")
+        return None
