@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -198,7 +197,7 @@ export default function ChatLayout({ groupId }) {
   const fetchGroupDetails = async (groupId) => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/groups/${groupId}`
+        `http://localhost:5000/api/groups/group-details/${groupId}`
       );
 
       if (!response.ok) {

@@ -55,7 +55,7 @@ def store_content_and_embeddings(file_path, supabase, group_id, sender_id, sende
                         "id": message_id,
                         "group_id": group_id,
                         "sender_id": sender_id,
-                        "sender_role": sender_role,
+                        "sender_role": "ai",
                         "content": content,
                         "embedding": embedding,
                     }).execute()
@@ -85,7 +85,7 @@ def generate_ai_response(user_query, context_text, supabase, group_id, user_id):
     response = model.generate_content(prompt)
     answer_text = response.text.strip()
 
-    ai_user_id = "AI"
+    ai_user_id = user_id
     message_id = str(uuid.uuid4())
 
     # Store AI response in messages
@@ -178,7 +178,7 @@ def ask_question():
         # Generate and return AI answer
         ai_response = generate_ai_response(user_query, context_text, supabase, group_id, user_id)
         return jsonify({"answer": ai_response})
-
+    
     except Exception as e:
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
