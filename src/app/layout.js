@@ -41,6 +41,7 @@ export default function RootLayout({ children }) {
         suppressContentEditableWarning
       >
         {children}
+        <Toaster />
         <img
           id="background"
           src="/background.svg"

@@ -1,3 +1,4 @@
+// components/sections/chat/chat-area.jsx
 "use client";
 
 import { useState, useRef, useEffect } from "react";
@@ -12,38 +13,85 @@ export function ChatArea({ selectedGroup }) {
   const messagesEndRef = useRef(null);
   const scrollAreaRef = useRef(null);
 
-  const [messages, setMessages] = useState([
-    {
-      id: "1",
-      sender: {
-        id: "t1",
-        name: "Miss Doubtfire",
-        avatar: "/placeholder.svg?height=40&width=40",
-      },
-      content:
-        "In view of convenience and compatibility of students, I have decided that students to form their own group of 3-4 students. You are required to complete this by 4 and post on this list by Friday.",
-      timestamp: new Date(2023, 2, 15, 10, 30),
-    },
-  ]);
+  const [messages, setMessages] = useState([]); // Initialize as an empty array
   const [newMessage, setNewMessage] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const handleSendMessage = () => {
+  const fetchMessages = async (groupId) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(
+        `http://localhost:5000/api/messages/fetch/${groupId}`
+      );
+      if (!response.ok) {
+        throw new Error("Failed to fetch messages");
+      }
+      const data = await response.json();
+      console.log("Fetched messages:", data);
+      setMessages(data);
+    } catch (err) {
+      setError(err.message);
+      console.error("Error fetching messages:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSendMessage = async () => {
     if (!newMessage.trim() || !selectedGroup) return;
 
-    const message = {
-      id: Date.now().toString(),
-      sender: {
-        id: "current-user",
-        name: "Miss Doubtfire",
-        avatar: "/placeholder.svg?height=40&width=40",
-      },
-      content: newMessage,
-      timestamp: new Date(),
-    };
+    // Get user info from session storage
+    const user = JSON.parse(sessionStorage.getItem("user"));
+    const userId = user["id"];
+    const userRole = user["role"];
 
-    setMessages([...messages, message]);
-    setNewMessage("");
+    try {
+      const response = await fetch("http://localhost:5000/api/messages/send", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          group_id: selectedGroup.id,
+          sender_id: userId,
+          sender_role: userRole,
+          content: newMessage,
+          embedding: null, // You can implement embeddings later
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to send message");
+      }
+
+      // Optimistically add the message to the local state
+      const message = {
+        id: Date.now().toString(), // Temporary ID
+        group_id: selectedGroup.id,
+        sender_id: userId,
+        sender_role: userRole,
+        content: newMessage,
+        timestamp: new Date().toISOString(), // Or get timestamp from the backend response if available
+      };
+
+      setMessages((prevMessages) => [...prevMessages, message]);
+      setNewMessage("");
+
+      // Re-fetch messages to update the UI, or use the response from the server
+      fetchMessages(selectedGroup.id);
+    } catch (err) {
+      setError(err.message);
+      console.error("Error sending message:", err);
+    }
   };
+
+  useEffect(() => {
+    if (selectedGroup) {
+      fetchMessages(selectedGroup.id);
+    }
+  }, [selectedGroup]);
 
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -57,6 +105,22 @@ export function ChatArea({ selectedGroup }) {
       handleSendMessage();
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <p className="text-muted-foreground">Loading messages...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <p className="text-red-500">Error: {error}</p>
+      </div>
+    );
+  }
 
   if (!selectedGroup) {
     return (
@@ -84,8 +148,8 @@ export function ChatArea({ selectedGroup }) {
                 <div key={message.id} className="flex gap-3">
                   <Avatar>
                     <AvatarImage
-                      src={message.sender.avatar}
-                      alt={message.sender.name}
+                      src={message.sender_avatar} // Use sender_avatar
+                      alt={message.sender_name} 
                     />
                     <AvatarFallback>
                       <User className="h-4 w-4" />
@@ -93,9 +157,9 @@ export function ChatArea({ selectedGroup }) {
                   </Avatar>
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <span className="font-medium">{message.sender.name}</span>
+                      <span className="font-medium">{message.sender_name}</span>{" "}
                       <span className="text-xs text-muted-foreground">
-                        {message.timestamp.toLocaleTimeString([], {
+                        {new Date(message.timestamp).toLocaleTimeString([], {
                           hour: "2-digit",
                           minute: "2-digit",
                         })}

@@ -26,6 +26,7 @@ export function LoginForm({ className, role = "student", ...props }) {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
+    current_role: role,
   });
 
   

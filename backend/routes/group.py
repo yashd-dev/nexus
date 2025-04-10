@@ -71,7 +71,10 @@ def join_group(group_id):
         if not student_id:
             return jsonify({"error": "Missing student_id in request body"}), 400
 
-        group_member_data = {"group_id": group_id, "student_id": student_id}
+    # Getting student id from user id
+        student__id=supabase.table("students").select("id").eq("user_id", student_id).execute().data[0]["id"]
+
+        group_member_data = {"group_id": group_id, "student_id": student__id}
         supabase.table("group_members").insert(group_member_data).execute()
 
         return jsonify({"message": f"Student {student_id} joined group {group_id}"}), 200
@@ -319,6 +322,7 @@ def get_user_info():
 
 @group_bp.route("/group-details/<group_id>", methods=["GET"])
 def get_group_details(group_id):
+    print("grp id", group_id)
     """
     Get detailed information about a specific group.
     Path parameter:

@@ -1,36 +1,47 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { ChevronDown, ChevronRight, Hash, Plus, Settings, Users } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-
+import { useState } from "react";
+import {
+  ChevronDown,
+  ChevronRight,
+  Hash,
+  Plus,
+  Settings,
+  Users,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export function Sidebar({ groups, onGroupSelect }) {
   const [expandedYears, setExpandedYears] = useState({
     y1: false,
     y2: true,
     y4: false,
-  })
+  });
 
   const [expandedSemesters, setExpandedSemesters] = useState({
     y2s4: true,
-  })
+  });
 
   const toggleYear = (yearId) => {
     setExpandedYears((prev) => ({
       ...prev,
       [yearId]: !prev[yearId],
-    }))
-  }
+    }));
+  };
 
   const toggleSemester = (semesterId) => {
     setExpandedSemesters((prev) => ({
       ...prev,
       [semesterId]: !prev[semesterId],
-    }))
-  }
+    }));
+  };
 
   return (
     <div className="border-r w-64 flex-shrink-0">
@@ -53,7 +64,11 @@ export function Sidebar({ groups, onGroupSelect }) {
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-4 w-4 rounded-full">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-4 w-4 rounded-full"
+                    >
                       <Plus className="h-3 w-3" />
                     </Button>
                   </TooltipTrigger>
@@ -107,7 +122,12 @@ export function Sidebar({ groups, onGroupSelect }) {
                                 >
                                   <div className="flex items-center gap-2">
                                     <Hash className="h-4 w-4" />
-                                    <span className="truncate">{division.name}</span>
+                                    <a
+                                      href={`/chats/${division.id}`}
+                                      className=" truncate"
+                                    >
+                                      {division.name}
+                                    </a>
                                   </div>
                                 </Button>
                               ))}
@@ -126,7 +146,10 @@ export function Sidebar({ groups, onGroupSelect }) {
               <span>Your Chats</span>
             </div>
             <div className="space-y-1">
-              <Button variant="ghost" className="w-full justify-start px-4 py-2 hover:bg-secondary/50">
+              <Button
+                variant="ghost"
+                className="w-full justify-start px-4 py-2 hover:bg-secondary/50"
+              >
                 <div className="flex items-center gap-2">
                   <Hash className="h-4 w-4" />
                   <span>Direct Messages</span>
@@ -137,5 +160,5 @@ export function Sidebar({ groups, onGroupSelect }) {
         </div>
       </ScrollArea>
     </div>
-  )
+  );
 }

@@ -207,6 +207,7 @@ def login():
         data = request.get_json()
         email = data.get("email")
         password = data.get("password")
+        current_role = data.get("current_role")
 
         if not email or not password:
             return (
@@ -265,6 +266,13 @@ def login():
         role = user_data["role"]
         additional_data = {}
 
+        if current_role and current_role != role:
+            return jsonify(
+                    {
+                        "errors": ["Invalid role"],
+                    }
+                ), 401
+            
         
         if role == "student":
             student_query = supabase.table("students").select("*").eq("user_id", user_id).execute()
