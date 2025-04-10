@@ -157,7 +157,7 @@ export function Sidebar({ groups, onGroupSelect }) {
                               {semester.divisions.map((division) => (
                                 <Link
                                   key={division.id}
-                                  href={`/group/${division.id}`}
+                                  href={`/chat/${division.id}`}
                                   className="w-full"
                                   onClick={() => onGroupSelect(division.id)}
                                 >
