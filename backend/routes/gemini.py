@@ -1,4 +1,5 @@
 import os
+import uuid
 import json
 import traceback
 import warnings
@@ -8,36 +9,27 @@ from werkzeug.utils import secure_filename
 from unstructured.partition.pdf import partition_pdf
 from supabase import create_client
 import google.generativeai as genai
-import uuid
 
-
+# Load environment variables
 load_dotenv()
-
 
 gemini_bp = Blueprint("gemini", __name__)
 
-
-
 def setup_gemini():
     """Sets up Google Gemini API. Returns a generative model."""
-    GEMINI_API_KEY ="AIzaSyBeDkJT3YOda0RiDBxPa2HKWvBfxy5a_iQ"
+    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
     if not GEMINI_API_KEY:
-        raise ValueError("API_KEY environment variable must be set.")
+        raise ValueError("GEMINI_API_KEY environment variable must be set.")
     genai.configure(api_key=GEMINI_API_KEY)
     return genai.GenerativeModel(model_name="gemini-1.5-flash")
 
-
-
 def get_embedding(text):
     """Generates an embedding for the given text using the Gemini API."""
-    model = current_app.config["gemini_model"]
     response = genai.embed_content(model="models/embedding-001", content=text)
     return response.get("embedding", [])
 
-
-
 def store_content_and_embeddings(file_path, supabase, group_id, sender_id, sender_role):
-    """Extracts content from PDF, generates embeddings, and stores them in Supabase (messages table)."""
+    """Extracts content from PDF, generates embeddings, and stores them in Supabase."""
     try:
         elements = partition_pdf(
             filename=file_path,
@@ -54,91 +46,75 @@ def store_content_and_embeddings(file_path, supabase, group_id, sender_id, sende
                 embedding = get_embedding(content)
                 if embedding:
                     message_id = str(uuid.uuid4())
-                    supabase.table("messages").insert(
-                        {
-                            "id": message_id,
-                            "group_id": group_id,
-                            "sender_id": sender_id,
-                            "sender_role": sender_role,
-                            "content": content,
-                            "embedding": embedding,
-                        }
-                    ).execute()
-
+                    supabase.table("messages").insert({
+                        "id": message_id,
+                        "group_id": group_id,
+                        "sender_id": sender_id,
+                        "sender_role": sender_role,
+                        "content": content,
+                        "embedding": embedding,
+                    }).execute()
     except Exception as e:
         print(f"Error in store_content_and_embeddings: {e}")
         raise
 
-
-
 def fetch_relevant_content(supabase, group_id):
-    """Fetches existing messages from the Supabase database for a specific group."""
+    """Fetches messages for a specific group from Supabase."""
     try:
-        response = (
-            supabase.table("messages")
-            .select("content")
-            .eq("group_id", group_id)
-            .execute()
-        )  
-
+        response = supabase.table("messages").select("content").eq("group_id", group_id).execute()
         return [item["content"] for item in response.data] if response.data else []
     except Exception as e:
         print(f"Error in fetch_relevant_content: {e}")
         raise
 
-
 def make_prompt(query, context):
-    """Creates a prompt for the Gemini model."""
+    """Creates a prompt for Gemini using context."""
     return f"Based on the following information, answer the question:\n\n{context}\n\nQuestion: {query}"
 
-
-
 def generate_ai_response(user_query, context_text, supabase, group_id, user_id):
+    """Generates an AI answer and saves it to the database."""
     model = current_app.config["gemini_model"]
-    
     warnings.filterwarnings("ignore")
 
     prompt = make_prompt(user_query, context_text)
     response = model.generate_content(prompt)
-    answers_text = response.text.strip()
+    answer_text = response.text.strip()
 
-    
-    ai_user_id = "AI"  
+    ai_user_id = "AI"
     message_id = str(uuid.uuid4())
 
-    
-
-    ai_message = {
+    # Store AI response in messages
+    supabase.table("messages").insert({
         "id": message_id,
         "group_id": group_id,
         "sender_id": ai_user_id,
         "sender_role": "ai",
-        "content": answers_text,
+        "content": answer_text,
         "embedding": None,
-    }
-    supabase.table("messages").insert(ai_message).execute()
-    return answers_text
+    }).execute()
 
+    # Also store in answers table
+    supabase.table("answers").insert({
+        "query": user_query,
+        "answers": answer_text
+    }).execute()
 
+    return answer_text
 
 @gemini_bp.route("/upload", methods=["POST"])
 def upload_file():
     """Handles file uploads, extracts content, and stores embeddings."""
     supabase = current_app.config["supabase_client"]
-    file_path = None 
-    try:
+    file_path = None
 
-        
+    try:
         group_id = request.form.get("group_id")
         sender_id = request.form.get("sender_id")
         sender_role = request.form.get("sender_role")
 
-        
         if not all([group_id, sender_id, sender_role]):
-            return jsonify({"error": "Missing group_id, sender_id, or sender_role in request body"}), 400
+            return jsonify({"error": "Missing group_id, sender_id, or sender_role"}), 400
 
-
-        
         if "file" not in request.files:
             return jsonify({"error": "No file provided"}), 400
 
@@ -152,9 +128,7 @@ def upload_file():
 
         store_content_and_embeddings(file_path, supabase, group_id, sender_id, sender_role)
 
-        return jsonify(
-            {"message": "✅ Content and embeddings uploaded successfully!"}
-        ), 200
+        return jsonify({"message": "✅ Content and embeddings uploaded successfully!"}), 200
 
     except Exception as e:
         traceback.print_exc()
@@ -164,75 +138,42 @@ def upload_file():
         if file_path and os.path.exists(file_path):
             os.remove(file_path)
 
-
 @gemini_bp.route("/query", methods=["POST"])
 def ask_question():
-    """Handles user queries and generates answers using the Gemini model."""
+    """Handles user queries and returns answers using Gemini or teacher context."""
     supabase = current_app.config["supabase_client"]
-    model = current_app.config["gemini_model"]
 
     try:
         data = request.get_json()
-        if not data or "query" not in data:
-            return jsonify({"error": "Missing 'query' in request body"}), 400
-
-        
-        user_query = data["query"]
-        query = data["query"]
+        user_query = data.get("query")
         group_id = data.get("group_id")
         user_id = data.get("user_id")
 
-        
-        existing = supabase.table("answers").select("*").eq("query", query).execute()
-        if existing.data:
-            return (
-                jsonify({"msg": "Answer already exists", "answer": existing.data[0]["answers"]}),
-                200,
-            )
+        if not user_query:
+            return jsonify({"error": "Missing 'query'"}), 400
 
-        
-        group_info = (
-            supabase.table("groups").select("*").eq("id", group_id).execute()
-        ).data
+        # Return existing answer if already present
+        existing = supabase.table("answers").select("*").eq("query", user_query).execute()
+        if existing.data:
+            return jsonify({"msg": "Answer already exists", "answer": existing.data[0]["answers"]}), 200
+
+        # Check if teacher is available
+        group_info = supabase.table("groups").select("teacher_id").eq("id", group_id).execute().data
         teacher_id = group_info[0]["teacher_id"] if group_info else None
 
+        is_teacher_available = True
         if teacher_id:
-            teacher_info = (
-                supabase.table("teachers").select("is_available").eq("id", teacher_id).execute()
-            ).data
+            teacher_info = supabase.table("teachers").select("is_available").eq("id", teacher_id).execute().data
             is_teacher_available = teacher_info[0]["is_available"] if teacher_info else True
-        else:
-            is_teacher_available = True  
 
-        if not is_teacher_available:
-            
-            
-            context_data = fetch_relevant_content(supabase, group_id)
-            context_text = "\n".join(context_data)
+        # Fetch context
+        context_data = fetch_relevant_content(supabase, group_id)
+        context_text = "\n".join(context_data)
 
-            
-            supabase.table("answers").insert({"query": user_query}).execute()
-
-            ai_response = generate_ai_response(user_query, context_text, supabase, group_id, user_id)
-
-            
-            return jsonify({"answer": ai_response})
-        else:
-            
-            
-            context_data = fetch_relevant_content(supabase, group_id)
-            context_text = "\n".join(context_data)
-
-            
-            supabase.table("answers").insert({"query": user_query}).execute()
-
-            
-            ai_response = generate_ai_response(user_query, context_text, supabase, group_id, user_id)
-
-            
-            return jsonify({"answer": ai_response})
+        # Generate and return AI answer
+        ai_response = generate_ai_response(user_query, context_text, supabase, group_id, user_id)
+        return jsonify({"answer": ai_response})
 
     except Exception as e:
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
-

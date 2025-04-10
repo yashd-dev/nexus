@@ -59,6 +59,34 @@ export function ChatArea({ selectedGroup }) {
       setLoading(false);
     }
   };
+  const handleFileUpload = async (file, groupId, senderId, senderRole) => {
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('group_id', groupId);
+    formData.append('sender_id', senderId);
+    formData.append('sender_role', senderRole);
+
+    const res = await fetch('http://localhost:5000/api/gemini/upload', {
+      method: 'POST',
+      body: formData,
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      console.error('Upload failed:', data.error);
+      return { success: false, error: data.error };
+    }
+
+    console.log('✅ Upload successful:', data.message);
+    return { success: true, message: data.message };
+  } catch (err) {
+    console.error('Upload error:', err);
+    return { success: false, error: err.message || 'Unknown error occurred' };
+  }
+};
+
 
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !selectedGroup) return;
@@ -449,20 +477,36 @@ export function ChatArea({ selectedGroup }) {
           {/* Message Input */}
           <div className="p-4 border-t bg-background/95 backdrop-blur-sm">
             <div className="flex gap-2 max-w-3xl mx-auto">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="shrink-0 h-10 w-10"
-                    >
-                      <Paperclip className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>Attach File</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+             <TooltipProvider>
+  <Tooltip>
+    <TooltipTrigger asChild>
+      <label htmlFor="file-upload">
+        <Button
+          variant="outline"
+          size="icon"
+          className="shrink-0 h-16 w-16 cursor-pointer"
+          asChild
+        >
+          <Paperclip className="h-4 w-4" />
+        </Button>
+      </label>
+    </TooltipTrigger>
+    <TooltipContent>Attach File</TooltipContent>
+  </Tooltip>
+  <input
+    type="file"
+    id="file-upload"
+    className="hidden"
+    onChange={(e) => {
+      const file = e.target.files[0];
+      if (file && selectedGroup && currentUserId) {
+        const userRole = user?.role;
+        handleFileUpload(file, selectedGroup.id, currentUserId, userRole);
+      }
+    }}
+  />
+</TooltipProvider>
+
 
               <div className="flex-1 relative">
                 <Input

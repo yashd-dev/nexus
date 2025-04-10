@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify, current_app
 import uuid
+from routes.gemini import get_embedding
 
 
 message_bp = Blueprint("messages", __name__)
@@ -15,7 +16,7 @@ def send_message():
         sender_id = data.get("sender_id")
         sender_role = data.get("sender_role")
         content = data.get("content")
-        embedding = data.get("embedding")
+        embedding = get_embedding(content)
 
         if not all([group_id, sender_id, sender_role, content]):
             return (
