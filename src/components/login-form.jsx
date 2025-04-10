@@ -18,28 +18,24 @@ export function LoginForm({ className, role = "student", ...props }) {
   useEffect(() => {
     const user = sessionStorage.getItem("user");
     if (user) {
-      router.push("/dashboard");
+      router.push("/chat");
     }
   }, []);
 
-  
   const [formData, setFormData] = useState({
     email: "",
     password: "",
     current_role: role,
   });
 
-  
   const [errors, setErrors] = useState({
     email: "",
     password: "",
   });
 
-  
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiError, setApiError] = useState("");
 
-  
   const handleChange = (e) => {
     const { id, value } = e.target;
     setFormData((prev) => ({
@@ -47,7 +43,6 @@ export function LoginForm({ className, role = "student", ...props }) {
       [id]: value,
     }));
 
-    
     if (errors[id]) {
       setErrors((prev) => ({
         ...prev,
@@ -55,13 +50,11 @@ export function LoginForm({ className, role = "student", ...props }) {
       }));
     }
 
-    
     if (apiError) {
       setApiError("");
     }
   };
 
-  
   const validateEmail = (email) => {
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     if (!email) return "Email is required";
@@ -74,7 +67,6 @@ export function LoginForm({ className, role = "student", ...props }) {
     return "";
   };
 
-  
   const validateForm = () => {
     const emailError = validateEmail(formData.email);
     const passwordError = validatePassword(formData.password);
@@ -87,11 +79,9 @@ export function LoginForm({ className, role = "student", ...props }) {
     return !emailError && !passwordError;
   };
 
-  
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    
     if (!validateForm()) {
       toast({
         title: "Validation Error",
@@ -116,9 +106,7 @@ export function LoginForm({ className, role = "student", ...props }) {
       const data = await response.json();
 
       if (!response.ok) {
-        
         if (data.errors && Array.isArray(data.errors)) {
-          
           const newErrors = { ...errors };
           data.errors.forEach((error) => {
             if (error.field && newErrors.hasOwnProperty(error.field)) {
@@ -132,17 +120,14 @@ export function LoginForm({ className, role = "student", ...props }) {
       }
       sessionStorage.setItem("user", JSON.stringify(data.user));
       sessionStorage.setItem("token", data.token);
-      
+
       toast({
         title: "Login successful",
         description: `Welcome back, ${data.user.name || data.user.email}!`,
       });
 
-      
       const userRole = data.user.role;
-      router.push(
-        userRole === "teacher" ? "/dashboard/teacher" : "/dashboard/student"
-      );
+      router.push("/chat");
     } catch (error) {
       setApiError(error.message);
       toast({
@@ -155,7 +140,6 @@ export function LoginForm({ className, role = "student", ...props }) {
     }
   };
 
-  
   const handleBlur = (e) => {
     const { id, value } = e.target;
     let error = "";

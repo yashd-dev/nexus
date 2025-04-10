@@ -1,12 +1,21 @@
-// components/sections/chat/chat-layout.jsx
+
 "use client";
 
 import { useState, useEffect } from "react";
 import { Sidebar } from "@/components/sections/chat/sidebar";
 import { ChatArea } from "@/components/sections/chat/chat-area";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { MainSkeleton } from "@/components/skeletons/main-skeleton";
 
 export default function ChatLayout({ groupId }) {
-  // Accept groupId as a prop
+  
   const [groups, setGroups] = useState({ years: [] });
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -16,7 +25,7 @@ export default function ChatLayout({ groupId }) {
   useEffect(() => {
     const fetchUserInfo = async () => {
       try {
-        // Get userId from session storage
+        
         const user = JSON.parse(sessionStorage.getItem("user"));
         const userId = JSON.parse(sessionStorage.getItem("user"))["id"];
 
@@ -28,14 +37,14 @@ export default function ChatLayout({ groupId }) {
           return;
         }
 
-        // Fetch user info including role and teacher/student ID
-        // const response = await fetch(`https://localhost:5000/api/groups/get-user-info?user_id="${userId}"`);
+        
+        
 
-        // if (!response.ok) {
-        //   throw new Error('Failed to fetch user information');
-        // }
+        
+        
+        
 
-        // Fetch groups based on user role
+        
         if (user.role === "teacher") {
           await fetchTeacherGroups(userId);
         } else if (user.role === "student") {
@@ -54,7 +63,7 @@ export default function ChatLayout({ groupId }) {
     fetchUserInfo();
   }, []);
 
-  // Fetch groups for teachers
+  
   const fetchTeacherGroups = async (userId) => {
     try {
       const response = await fetch(
@@ -67,14 +76,14 @@ export default function ChatLayout({ groupId }) {
 
       const data = await response.json();
 
-      // Transform API response to match our hierarchical structure
+      
       const transformedGroups = transformGroupsToHierarchy(data.groups);
       setGroups(transformedGroups);
 
-      // Find active group if any.  If a groupId is provided, use that instead
+      
       let activeGroup;
       if (groupId) {
-        activeGroup = { id: groupId }; // Use the groupId prop
+        activeGroup = { id: groupId }; 
       } else {
         activeGroup = findActiveGroup(transformedGroups);
       }
@@ -86,7 +95,7 @@ export default function ChatLayout({ groupId }) {
     }
   };
 
-  // Fetch groups for students
+  
   const fetchStudentGroups = async (userId) => {
     try {
       const response = await fetch(
@@ -99,14 +108,14 @@ export default function ChatLayout({ groupId }) {
 
       const data = await response.json();
 
-      // Transform API response to match our hierarchical structure
+      
       const transformedGroups = transformGroupsToHierarchy(data.groups);
       setGroups(transformedGroups);
 
-      // Find active group if any. If a groupId is provided, use that instead
+      
       let activeGroup;
       if (groupId) {
-        activeGroup = { id: groupId }; // Use the groupId prop
+        activeGroup = { id: groupId }; 
       } else {
         activeGroup = findActiveGroup(transformedGroups);
       }
@@ -118,12 +127,12 @@ export default function ChatLayout({ groupId }) {
     }
   };
 
-  // Transform flat list of groups to hierarchical structure by semester
+  
   const transformGroupsToHierarchy = (groups) => {
     const hierarchy = { years: [] };
     const semesterMap = {};
 
-    // Group by semester number
+    
     groups.forEach((group) => {
       const semesterNumber = group.semester_number || "Unknown";
 
@@ -138,7 +147,7 @@ export default function ChatLayout({ groupId }) {
       semesterMap[semesterNumber].divisions.push({
         id: group.id,
         name: group.subject_name,
-        // Set first group as active if none is active yet
+        
         active:
           semesterMap[semesterNumber].divisions.length === 0 &&
           Object.keys(semesterMap).length === 1,
@@ -154,7 +163,7 @@ export default function ChatLayout({ groupId }) {
     return hierarchy;
   };
 
-  // Find active group in hierarchy
+  
   function findActiveGroup(data) {
     for (const year of data.years || []) {
       for (const semester of year.semesters || []) {
@@ -169,7 +178,7 @@ export default function ChatLayout({ groupId }) {
       }
     }
 
-    // If no active group, return the first one if available
+    
     if (
       data.years?.length > 0 &&
       data.years[0].semesters?.length > 0 &&
@@ -185,10 +194,12 @@ export default function ChatLayout({ groupId }) {
     return null;
   }
 
-  // Fetch detailed info for a group
+  
   const fetchGroupDetails = async (groupId) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/groups/group-details/${groupId}`);
+      const response = await fetch(
+        `http://localhost:5000/api/groups/group-details/${groupId}`
+      );
 
       if (!response.ok) {
         throw new Error("Failed to fetch group details");
@@ -196,7 +207,7 @@ export default function ChatLayout({ groupId }) {
 
       const groupData = await response.json();
 
-      // Transform API response to match our component's expected structure
+      
       setSelectedGroup({
         id: groupData.id,
         name: groupData.subject_name,
@@ -208,7 +219,7 @@ export default function ChatLayout({ groupId }) {
             avatar: "/placeholder.svg?height=40&width=40",
           },
         ],
-        resources: [], // Add resources if needed
+        resources: [], 
         students: groupData.students,
         messageCount: groupData.message_count,
       });
@@ -218,7 +229,7 @@ export default function ChatLayout({ groupId }) {
   };
 
   const handleGroupSelect = async (groupId) => {
-    // Update active state in groups
+    
     const updatedGroups = { ...groups };
     updatedGroups.years.forEach((y) => {
       y.semesters.forEach((s) => {
@@ -229,11 +240,11 @@ export default function ChatLayout({ groupId }) {
     });
     setGroups(updatedGroups);
 
-    // Fetch details for the selected group
+    
     await fetchGroupDetails(groupId);
   };
 
-  // useEffect to fetch group details when groupId changes
+  
   useEffect(() => {
     if (groupId) {
       fetchGroupDetails(groupId);
@@ -241,11 +252,7 @@ export default function ChatLayout({ groupId }) {
   }, [groupId]);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-lg">Loading groups...</div>
-      </div>
-    );
+    return <MainSkeleton />;
   }
 
   if (error) {
