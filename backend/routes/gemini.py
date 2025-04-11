@@ -101,7 +101,8 @@ def generate_ai_response(user_query, context_text, supabase, group_id, user_id):
     # Also store in answers table
     supabase.table("answers").insert({
         "query": user_query,
-        "answers": answer_text
+        "answers": answer_text,
+        "student_id":user_id
     }).execute()
 
     return answer_text
