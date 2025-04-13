@@ -1,8 +1,8 @@
-"use client";
+"use client"
 
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { MessageSquareOff, Home, ArrowLeft } from "lucide-react";
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { MessageSquareOff, Home, ArrowLeft } from "lucide-react"
 
 export default function NotFound() {
   return (
@@ -19,8 +19,8 @@ export default function NotFound() {
         <h2 className="text-2xl font-semibold mb-4">Chat Not Found</h2>
 
         <p className="text-muted-foreground mb-8">
-          The chat group or conversation you're looking for doesn't exist or may
-          have been moved to a different semester.
+          The chat group or conversation you're looking for doesn't exist or may have been moved to a different
+          semester.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 w-full">
@@ -30,11 +30,7 @@ export default function NotFound() {
               Back to Home
             </Link>
           </Button>
-          <Button
-            variant="outline"
-            onClick={() => window.history.back()}
-            className="flex-1"
-          >
+          <Button variant="outline" onClick={() => window.history.back()} className="flex-1">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Go Back
           </Button>
@@ -54,5 +50,5 @@ export default function NotFound() {
         ))}
       </div>
     </div>
-  );
+  )
 }

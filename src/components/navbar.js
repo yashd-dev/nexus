@@ -1,3 +1,7 @@
+"use client"
+
+import Link from "next/link"
+
 export default function Navbar() {
   return (
     <>
@@ -23,27 +27,14 @@ export default function Navbar() {
           </div>
         </div>
         <div className="flex items-center space-x-3">
-          <Link
-            href="/login"
-            className="text-gray-600 hover:text-black hidden sm:block"
-          >
+          <Link href="/login" className="text-gray-600 hover:text-black hidden sm:block">
             Log in
           </Link>
-          <Link
-            href="/signup"
-            className="bg-black text-white px-4 py-2 rounded-md hover:bg-gray-800 hidden sm:block"
-          >
+          <Link href="/signup" className="bg-black text-white px-4 py-2 rounded-md hover:bg-gray-800 hidden sm:block">
             Sign up
           </Link>
-          <button
-            className="block md:hidden"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          >
-            {mobileMenuOpen ? (
-              <X className="h-6 w-6 text-black z-10" color="black" />
-            ) : (
-              <Menu className="h-6 w-6" />
-            )}
+          <button className="block md:hidden" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+            {mobileMenuOpen ? <X className="h-6 w-6 text-black z-10" color="black" /> : <Menu className="h-6 w-6" />}
           </button>
         </div>
       </nav>
@@ -55,54 +46,26 @@ export default function Navbar() {
               className="block md:hidden absolute -top-[10vh] right-0 p-2 rounded-md"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
-              {mobileMenuOpen ? (
-                <X className="h-6 w-6 text-black z-10" color="black" />
-              ) : (
-                <Menu className="h-6 w-6" />
-              )}
+              {mobileMenuOpen ? <X className="h-6 w-6 text-black z-10" color="black" /> : <Menu className="h-6 w-6" />}
             </button>
 
-            <Link
-              href="#features"
-              className="text-xl font-medium"
-              onClick={() => setMobileMenuOpen(false)}
-            >
+            <Link href="#features" className="text-xl font-medium" onClick={() => setMobileMenuOpen(false)}>
               Features
             </Link>
-            <Link
-              href="#resources"
-              className="text-xl font-medium"
-              onClick={() => setMobileMenuOpen(false)}
-            >
+            <Link href="#resources" className="text-xl font-medium" onClick={() => setMobileMenuOpen(false)}>
               Resources
             </Link>
-            <Link
-              href="#about"
-              className="text-xl font-medium"
-              onClick={() => setMobileMenuOpen(false)}
-            >
+            <Link href="#about" className="text-xl font-medium" onClick={() => setMobileMenuOpen(false)}>
               About
             </Link>
-            <Link
-              href="#enterprise"
-              className="text-xl font-medium"
-              onClick={() => setMobileMenuOpen(false)}
-            >
+            <Link href="#enterprise" className="text-xl font-medium" onClick={() => setMobileMenuOpen(false)}>
               Enterprise
             </Link>
-            <Link
-              href="#pricing"
-              className="text-xl font-medium"
-              onClick={() => setMobileMenuOpen(false)}
-            >
+            <Link href="#pricing" className="text-xl font-medium" onClick={() => setMobileMenuOpen(false)}>
               Pricing
             </Link>
             <div className="pt-6 border-t border-gray-100">
-              <Link
-                href="/login"
-                className="block py-3 text-xl font-medium"
-                onClick={() => setMobileMenuOpen(false)}
-              >
+              <Link href="/login" className="block py-3 text-xl font-medium" onClick={() => setMobileMenuOpen(false)}>
                 Log in
               </Link>
               <Link
@@ -117,5 +80,5 @@ export default function Navbar() {
         </div>
       )}
     </>
-  );
+  )
 }

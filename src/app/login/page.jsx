@@ -1,12 +1,12 @@
-import { LoginForm } from "@/components/login-form";
-import { redirect } from "next/navigation";
+import { LoginForm } from "@/components/login-form"
+import { redirect } from "next/navigation"
 
 export default async function LoginPage({ searchParams }) {
-  const role = await searchParams?.role;
+  const role = await searchParams?.role
 
   // Redirect to landing page if no role is specified
   if (!role) {
-    redirect("/");
+    redirect("/")
   }
 
   return (
@@ -15,5 +15,5 @@ export default async function LoginPage({ searchParams }) {
         <LoginForm role={role} />
       </div>
     </div>
-  );
+  )
 }

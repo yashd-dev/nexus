@@ -1,168 +1,47 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import { Sidebar } from "@/components/sections/chat/sidebar";
-import { ChatArea } from "@/components/sections/chat/chat-area";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-} from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MainSkeleton } from "@/components/skeletons/main-skeleton";
+import { useState, useEffect } from "react"
+import { Sidebar } from "@/components/sections/chat/sidebar"
+import { ChatArea } from "@/components/sections/chat/chat-area"
+import { MainSkeleton } from "@/components/skeletons/main-skeleton"
+import { useGroups } from "@/hooks/use-groups"
+import { useAuth } from "@/contexts/auth-context"
 
 export default function ChatLayout({ groupId }) {
-  
-  const [groups, setGroups] = useState({ years: [] });
-  const [selectedGroup, setSelectedGroup] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [userInfo, setUserInfo] = useState(null);
+  const { groups, loading: groupsLoading, error: groupsError, getGroupDetails } = useGroups()
+  const [selectedGroup, setSelectedGroup] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const { user } = useAuth()
 
   useEffect(() => {
-    const fetchUserInfo = async () => {
+    const fetchInitialGroup = async () => {
       try {
-        
-        const user = JSON.parse(sessionStorage.getItem("user"));
-        const userId = JSON.parse(sessionStorage.getItem("user"))["id"];
-
-        if (!userId) {
-          setError(
-            "User ID not found in session storage. Please log in again."
-          );
-          setLoading(false);
-          return;
+        if (groupId) {
+          // If a specific group ID is provided, fetch that group
+          const groupDetails = await getGroupDetails(groupId)
+          setSelectedGroup(groupDetails)
+        } else if (groups.years.length > 0) {
+          // Otherwise, find the first active group or the first group available
+          const activeGroup = findActiveGroup(groups)
+          if (activeGroup) {
+            const groupDetails = await getGroupDetails(activeGroup.id)
+            setSelectedGroup(groupDetails)
+          }
         }
-
-        
-        
-
-        
-        
-        
-
-        
-        if (user.role === "teacher") {
-          await fetchTeacherGroups(userId);
-        } else if (user.role === "student") {
-          await fetchStudentGroups(userId);
-        } else {
-          setError("Unknown user role");
-        }
-
-        setLoading(false);
       } catch (err) {
-        setError(err.message);
-        setLoading(false);
+        console.error("Error fetching initial group:", err)
+        setError(err.message)
+      } finally {
+        setLoading(false)
       }
-    };
-    console.log("userInfo", groupId);
-    fetchUserInfo();
-  }, []);
-
-  
-  const fetchTeacherGroups = async (userId) => {
-    try {
-      const response = await fetch(
-        `http://localhost:5000/api/groups/teacher-groups?user_id=${userId}`
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch teacher groups");
-      }
-
-      const data = await response.json();
-
-      
-      const transformedGroups = transformGroupsToHierarchy(data.groups);
-      setGroups(transformedGroups);
-
-      
-      let activeGroup;
-      if (groupId) {
-        activeGroup = { id: groupId }; 
-      } else {
-        activeGroup = findActiveGroup(transformedGroups);
-      }
-      if (activeGroup) {
-        await fetchGroupDetails(activeGroup.id);
-      }
-    } catch (err) {
-      setError(err.message);
     }
-  };
 
-  
-  const fetchStudentGroups = async (userId) => {
-    try {
-      const response = await fetch(
-        `http://localhost:5000/api/groups/student-groups?user_id=${userId}`
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch student groups");
-      }
-
-      const data = await response.json();
-
-      
-      const transformedGroups = transformGroupsToHierarchy(data.groups);
-      setGroups(transformedGroups);
-
-      
-      let activeGroup;
-      if (groupId) {
-        activeGroup = { id: groupId }; 
-      } else {
-        activeGroup = findActiveGroup(transformedGroups);
-      }
-      if (activeGroup) {
-        await fetchGroupDetails(activeGroup.id);
-      }
-    } catch (err) {
-      setError(err.message);
+    if (!groupsLoading && !groupsError) {
+      fetchInitialGroup()
     }
-  };
+  }, [groupId, groups, groupsLoading, groupsError, getGroupDetails])
 
-  
-  const transformGroupsToHierarchy = (groups) => {
-    const hierarchy = { years: [] };
-    const semesterMap = {};
-
-    
-    groups.forEach((group) => {
-      const semesterNumber = group.semester_number || "Unknown";
-
-      if (!semesterMap[semesterNumber]) {
-        semesterMap[semesterNumber] = {
-          id: `sem-${semesterNumber}`,
-          name: `Semester ${semesterNumber}`,
-          divisions: [],
-        };
-      }
-
-      semesterMap[semesterNumber].divisions.push({
-        id: group.id,
-        name: group.subject_name,
-        
-        active:
-          semesterMap[semesterNumber].divisions.length === 0 &&
-          Object.keys(semesterMap).length === 1,
-      });
-    });
-
-    hierarchy.years.push({
-      id: "current",
-      name: "Current Year",
-      semesters: Object.values(semesterMap),
-    });
-
-    return hierarchy;
-  };
-
-  
   function findActiveGroup(data) {
     for (const year of data.years || []) {
       for (const semester of year.semesters || []) {
@@ -171,105 +50,64 @@ export default function ChatLayout({ groupId }) {
             return {
               id: division.id,
               name: division.name,
-            };
+            }
           }
         }
       }
     }
 
-    
     if (
       data.years?.length > 0 &&
       data.years[0].semesters?.length > 0 &&
       data.years[0].semesters[0].divisions?.length > 0
     ) {
-      const firstDivision = data.years[0].semesters[0].divisions[0];
+      const firstDivision = data.years[0].semesters[0].divisions[0]
       return {
         id: firstDivision.id,
         name: firstDivision.name,
-      };
-    }
-
-    return null;
-  }
-
-  
-  const fetchGroupDetails = async (groupId) => {
-    try {
-      const response = await fetch(
-        `http://localhost:5000/api/groups/group-details/${groupId}`
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch group details");
       }
-
-      const groupData = await response.json();
-
-      
-      setSelectedGroup({
-        id: groupData.id,
-        name: groupData.subject_name,
-        description: `${groupData.subject_name} - Semester ${groupData.semester_number}`,
-        teachers: [
-          {
-            id: groupData.teacher.id,
-            name: groupData.teacher.name,
-            avatar: "/placeholder.svg?height=40&width=40",
-          },
-        ],
-        resources: [], 
-        students: groupData.students,
-        messageCount: groupData.message_count,
-      });
-    } catch (err) {
-      console.error("Error fetching group details:", err);
     }
-  };
+
+    return null
+  }
 
   const handleGroupSelect = async (groupId) => {
-    
-    const updatedGroups = { ...groups };
-    updatedGroups.years.forEach((y) => {
-      y.semesters.forEach((s) => {
-        s.divisions.forEach((d) => {
-          d.active = d.id === groupId;
-        });
-      });
-    });
-    setGroups(updatedGroups);
+    try {
+      // Update the active state in the groups data
+      const updatedGroups = { ...groups }
+      updatedGroups.years.forEach((y) => {
+        y.semesters.forEach((s) => {
+          s.divisions.forEach((d) => {
+            d.active = d.id === groupId
+          })
+        })
+      })
 
-    
-    await fetchGroupDetails(groupId);
-  };
-
-  
-  useEffect(() => {
-    if (groupId) {
-      fetchGroupDetails(groupId);
+      // Fetch the details of the selected group
+      const groupDetails = await getGroupDetails(groupId)
+      setSelectedGroup(groupDetails)
+    } catch (err) {
+      console.error("Error selecting group:", err)
+      setError(err.message)
     }
-  }, [groupId]);
-
-  if (loading) {
-    return <MainSkeleton />;
   }
 
-  if (error) {
+  if (groupsLoading || loading) {
+    return <MainSkeleton />
+  }
+
+  if (groupsError || error) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <div className="text-lg text-red-500">Error: {error}</div>
+        <div className="text-lg text-red-500">Error: {groupsError || error}</div>
       </div>
-    );
+    )
   }
 
   return (
     <div className="flex h-screen bg-background">
-      <Sidebar
-        groups={groups}
-        onGroupSelect={handleGroupSelect}
-        userRole={userInfo?.role}
-      />
-      <ChatArea selectedGroup={selectedGroup} userInfo={userInfo} />
+      <Sidebar groups={groups} onGroupSelect={handleGroupSelect} userRole={user?.role} />
+      <ChatArea selectedGroup={selectedGroup} />
     </div>
-  );
+  )
 }

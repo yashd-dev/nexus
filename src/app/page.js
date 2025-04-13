@@ -1,16 +1,8 @@
-"use client";
-import Link from "next/link";
-import {
-  ArrowRight,
-  Copy,
-  BarChart2,
-  ExternalLink,
-  Menu,
-  X,
-} from "lucide-react";
-import { useState } from "react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-
+"use client"
+import Link from "next/link"
+import { ArrowRight, Copy, BarChart2, ExternalLink, Menu, X } from "lucide-react"
+import { useState } from "react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 function Navigation({ mobileMenuOpen, setMobileMenuOpen }) {
   return (
@@ -36,10 +28,7 @@ function Navigation({ mobileMenuOpen, setMobileMenuOpen }) {
         </div>
       </div>
       <div className="flex items-center space-x-3">
-        <Link
-          href="/access-account"
-          className="text-gray-600 hover:text-black hidden sm:block"
-        >
+        <Link href="/access-account" className="text-gray-600 hover:text-black hidden sm:block">
           Log in
         </Link>
         <Link
@@ -48,24 +37,16 @@ function Navigation({ mobileMenuOpen, setMobileMenuOpen }) {
         >
           Sign up
         </Link>
-        <button
-          className="block md:hidden"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        >
-          {mobileMenuOpen ? (
-            <X className="h-6 w-6 text-black z-10" color="black" />
-          ) : (
-            <Menu className="h-6 w-6" />
-          )}
+        <button className="block md:hidden" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+          {mobileMenuOpen ? <X className="h-6 w-6 text-black z-10" color="black" /> : <Menu className="h-6 w-6" />}
         </button>
       </div>
     </nav>
-  );
+  )
 }
 
-
 function MobileMenu({ mobileMenuOpen, setMobileMenuOpen }) {
-  if (!mobileMenuOpen) return null;
+  if (!mobileMenuOpen) return null
 
   return (
     <div className="fixed inset-0 bg-white z-50 pt-20 px-4 md:hidden ">
@@ -74,53 +55,25 @@ function MobileMenu({ mobileMenuOpen, setMobileMenuOpen }) {
           className="block md:hidden absolute -top-[10vh] right-0 p-2 rounded-md"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
         >
-          {mobileMenuOpen ? (
-            <X className="h-6 w-6 text-black z-10" color="black" />
-          ) : (
-            <Menu className="h-6 w-6" />
-          )}
+          {mobileMenuOpen ? <X className="h-6 w-6 text-black z-10" color="black" /> : <Menu className="h-6 w-6" />}
         </button>
-        <Link
-          href="#features"
-          className="text-xl font-medium"
-          onClick={() => setMobileMenuOpen(false)}
-        >
+        <Link href="#features" className="text-xl font-medium" onClick={() => setMobileMenuOpen(false)}>
           Features
         </Link>
-        <Link
-          href="#resources"
-          className="text-xl font-medium"
-          onClick={() => setMobileMenuOpen(false)}
-        >
+        <Link href="#resources" className="text-xl font-medium" onClick={() => setMobileMenuOpen(false)}>
           Resources
         </Link>
-        <Link
-          href="#about"
-          className="text-xl font-medium"
-          onClick={() => setMobileMenuOpen(false)}
-        >
+        <Link href="#about" className="text-xl font-medium" onClick={() => setMobileMenuOpen(false)}>
           About
         </Link>
-        <Link
-          href="#enterprise"
-          className="text-xl font-medium"
-          onClick={() => setMobileMenuOpen(false)}
-        >
+        <Link href="#enterprise" className="text-xl font-medium" onClick={() => setMobileMenuOpen(false)}>
           Enterprise
         </Link>
-        <Link
-          href="#pricing"
-          className="text-xl font-medium"
-          onClick={() => setMobileMenuOpen(false)}
-        >
+        <Link href="#pricing" className="text-xl font-medium" onClick={() => setMobileMenuOpen(false)}>
           Pricing
         </Link>
         <div className="pt-6 border-t border-gray-100">
-          <Link
-            href="/login"
-            className="block py-3 text-xl font-medium"
-            onClick={() => setMobileMenuOpen(false)}
-          >
+          <Link href="/login" className="block py-3 text-xl font-medium" onClick={() => setMobileMenuOpen(false)}>
             Log in
           </Link>
           <Link
@@ -133,9 +86,8 @@ function MobileMenu({ mobileMenuOpen, setMobileMenuOpen }) {
         </div>
       </div>
     </div>
-  );
+  )
 }
-
 
 function HeroSection() {
   return (
@@ -149,15 +101,11 @@ function HeroSection() {
       </h2>
 
       <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto mb-8 sm:mb-10">
-        Connect with Students Without Compromising Privacy And Help Students
-        Even on your break!
+        Connect with Students Without Compromising Privacy And Help Students Even on your break!
       </p>
 
       <div className="flex flex-col sm:flex-row justify-center gap-4 mb-8 sm:mb-12">
-        <Link
-          href="/access-account"
-          className="bg-black text-white px-6 py-3 rounded-md hover:bg-gray-800 font-medium"
-        >
+        <Link href="/access-account" className="bg-black text-white px-6 py-3 rounded-md hover:bg-gray-800 font-medium">
           Start for free
         </Link>
         <Link
@@ -174,9 +122,8 @@ function HeroSection() {
 
       <DemoInput />
     </div>
-  );
+  )
 }
-
 
 function DemoInput() {
   return (
@@ -196,19 +143,12 @@ function DemoInput() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between">
           <div className="flex items-center mb-3 sm:mb-0">
             <Avatar>
-              <AvatarImage
-                src="https://thispersondoesnotexist.com/"
-                alt="teacher"
-              />
+              <AvatarImage src="https://thispersondoesnotexist.com/" alt="teacher" />
               <AvatarFallback>TC</AvatarFallback>
             </Avatar>
             <div>
-              <p className="text-sm font-medium">
-                computer networks subject llm
-              </p>
-              <p className="text-xs text-muted-foreground">
-                → Some computer networks faculty
-              </p>
+              <p className="text-sm font-medium">computer networks subject llm</p>
+              <p className="text-xs text-muted-foreground">→ Some computer networks faculty</p>
             </div>
           </div>
 
@@ -227,9 +167,8 @@ function DemoInput() {
         </div>
       </div>
     </div>
-  );
+  )
 }
-
 
 function UniversityLogos({ universities }) {
   return (
@@ -246,17 +185,14 @@ function UniversityLogos({ universities }) {
                 alt={`${university.name} logo`}
                 className="h-12 sm:h-16 w-auto mb-3 object-contain"
               />
-              <div className="text-gray-400 text-base sm:text-lg font-medium">
-                {university.name}
-              </div>
+              <div className="text-gray-400 text-base sm:text-lg font-medium">{university.name}</div>
             </div>
           ))}
         </div>
       </div>
     </div>
-  );
+  )
 }
-
 
 function FeaturesSection() {
   return (
@@ -268,8 +204,8 @@ function FeaturesSection() {
           modern educators
         </h2>
         <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto">
-          Nexus is more than just a communication tool. We've built a suite of
-          powerful features that gives you teaching superpowers.
+          Nexus is more than just a communication tool. We've built a suite of powerful features that gives you teaching
+          superpowers.
         </p>
       </div>
 
@@ -282,17 +218,11 @@ function FeaturesSection() {
               <div className="flex items-center">
                 <div className="w-8 sm:w-10 h-8 sm:h-10 bg-gray-300 rounded-full mr-2 sm:mr-3"></div>
                 <div className="text-left">
-                  <p className="font-medium text-sm sm:text-base">
-                    math.nexus.to
-                  </p>
-                  <p className="text-xs sm:text-sm text-muted-foreground">
-                    42.6K responses
-                  </p>
+                  <p className="font-medium text-sm sm:text-base">math.nexus.to</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">42.6K responses</p>
                 </div>
               </div>
-              <div className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs sm:text-sm">
-                Active
-              </div>
+              <div className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs sm:text-sm">Active</div>
             </div>
           }
         />
@@ -304,14 +234,10 @@ function FeaturesSection() {
             <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <div className="w-8 sm:w-10 h-8 sm:h-10 bg-gray-300 rounded-full mr-2 sm:mr-3"></div>
-                <p className="font-medium text-sm sm:text-base">
-                  science.nexus.to
-                </p>
+                <p className="font-medium text-sm sm:text-base">science.nexus.to</p>
               </div>
               <div className="flex items-center">
-                <p className="text-xs sm:text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                  Protected
-                </p>
+                <p className="text-xs sm:text-sm bg-blue-100 text-blue-800 px-2 py-1 rounded">Protected</p>
               </div>
             </div>
           }
@@ -322,9 +248,7 @@ function FeaturesSection() {
           description="Upload your teaching materials to help Nexus provide accurate responses in your style."
           demo={
             <div className="h-24 sm:h-32 flex items-center justify-center border-2 border-dashed border-gray-300 rounded">
-              <p className="text-muted-foreground text-sm sm:text-base">
-                Upload lecture notes or syllabus
-              </p>
+              <p className="text-muted-foreground text-sm sm:text-base">Upload lecture notes or syllabus</p>
             </div>
           }
         />
@@ -347,9 +271,8 @@ function FeaturesSection() {
         />
       </div>
     </div>
-  );
+  )
 }
-
 
 function FeatureCard({ title, description, demo }) {
   return (
@@ -358,37 +281,27 @@ function FeatureCard({ title, description, demo }) {
       <p className="text-gray-600 mb-6">{description}</p>
       <div className="p-4 sm:p-6 rounded border border-muted">{demo}</div>
     </div>
-  );
+  )
 }
-
 
 function CTASection() {
   return (
     <div className="py-16 sm:py-24 max-w-6xl mx-auto px-4 text-center">
-      <h2 className="text-3xl sm:text-4xl font-bold mb-4 sm:mb-6">
-        Ready to transform your student communication?
-      </h2>
+      <h2 className="text-3xl sm:text-4xl font-bold mb-4 sm:mb-6">Ready to transform your student communication?</h2>
       <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto mb-6 sm:mb-8">
         Start for free and upgrade as your needs grow.
       </p>
       <div className="flex flex-col sm:flex-row justify-center gap-4">
-        <Link
-          href="/signup"
-          className="bg-black text-white px-6 py-3 rounded-md hover:bg-gray-800 font-medium"
-        >
+        <Link href="/signup" className="bg-black text-white px-6 py-3 rounded-md hover:bg-gray-800 font-medium">
           Get started
         </Link>
-        <Link
-          href="/contact"
-          className="border border-gray-300 px-6 py-3 rounded-md hover:border-gray-500 font-medium"
-        >
+        <Link href="/contact" className="border border-gray-300 px-6 py-3 rounded-md hover:border-gray-500 font-medium">
           Contact sales
         </Link>
       </div>
     </div>
-  );
+  )
 }
-
 
 function Footer() {
   return (
@@ -400,7 +313,6 @@ function Footer() {
             <FooterLink href="#" text="Pricing" />
             <FooterLink href="#" text="Enterprise" />
           </FooterColumn>
-
 
           <FooterColumn title="Company">
             <FooterLink href="#" text="About" />
@@ -421,9 +333,8 @@ function Footer() {
         </div>
       </div>
     </footer>
-  );
+  )
 }
-
 
 function FooterColumn({ title, children, className = "" }) {
   return (
@@ -431,9 +342,8 @@ function FooterColumn({ title, children, className = "" }) {
       <h3 className="font-bold mb-4">{title}</h3>
       <ul className="space-y-2">{children}</ul>
     </div>
-  );
+  )
 }
-
 
 function FooterLink({ href, text }) {
   return (
@@ -442,12 +352,11 @@ function FooterLink({ href, text }) {
         {text}
       </Link>
     </li>
-  );
+  )
 }
 
-
 export default function Home() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const universities = [
     {
@@ -470,23 +379,17 @@ export default function Home() {
       name: "Yale",
       logo: "https://upload.wikimedia.org/wikipedia/commons/0/07/Yale_University_Shield_1.svg",
     },
-  ];
+  ]
 
   return (
     <main className="font-sans">
-      <Navigation
-        mobileMenuOpen={mobileMenuOpen}
-        setMobileMenuOpen={setMobileMenuOpen}
-      />
-      <MobileMenu
-        mobileMenuOpen={mobileMenuOpen}
-        setMobileMenuOpen={setMobileMenuOpen}
-      />
+      <Navigation mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
+      <MobileMenu mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
       <HeroSection />
       <UniversityLogos universities={universities} />
       <FeaturesSection />
       <CTASection />
       <Footer />
     </main>
-  );
+  )
 }

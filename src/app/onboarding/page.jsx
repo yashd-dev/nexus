@@ -19,6 +19,8 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ArrowRight, Users, MessageSquare, Clock, Shield } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useAuth } from "@/contexts/auth-context"
+import { supabase } from "@/lib/supabase"
 
 // CS-related subjects
 const subjectData = [
@@ -32,14 +34,6 @@ const subjectData = [
   { id: "8", name: "Artificial Intelligence" },
   { id: "9", name: "Machine Learning" },
   { id: "10", name: "Software Engineering" },
-  { id: "11", name: "Computer Architecture" },
-  { id: "12", name: "Cybersecurity" },
-  { id: "13", name: "Cloud Computing" },
-  { id: "14", name: "Mobile App Development" },
-  { id: "15", name: "Mathematics" },
-  { id: "16", name: "Physics" },
-  { id: "17", name: "Chemistry" },
-  { id: "18", name: "Biology" },
 ]
 
 // Group types as per API requirements
@@ -48,14 +42,12 @@ const groupTypes = [
   { id: "personal", name: "Personal" },
 ]
 
-// Backend URL - replace with your actual backend URL
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000"
-
 export default function OnboardingPage() {
   const searchParams = useSearchParams()
   const router = useRouter()
+  const { user } = useAuth()
   const role = searchParams.get("role") || "student"
-  const [name, setName] = useState("there")
+  const [name, setName] = useState("")
   const [userId, setUserId] = useState("")
   const [createGroupOpen, setCreateGroupOpen] = useState(false)
   const [joinGroupOpen, setJoinGroupOpen] = useState(false)
@@ -73,24 +65,52 @@ export default function OnboardingPage() {
   // State for form
   const [selectedSemester, setSelectedSemester] = useState("")
   const [selectedSubject, setSelectedSubject] = useState("")
-  const [selectedGroupType, setSelectedGroupType] = useState("")
+  const [selectedGroupType, setSelectedGroupType] = useState("group")
 
-  // Fetch semesters from API
+  // Fetch user data and semesters
   useEffect(() => {
-    const fetchSemesters = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true)
-        const response = await fetch(`${BACKEND_URL}/api/semesters`)
-        if (!response.ok) {
-          throw new Error("Failed to fetch semesters")
+
+        // Fetch user data
+        if (user) {
+          const { data: userData, error: userError } = await supabase
+            .from("users")
+            .select("*")
+            .eq("id", user.id)
+            .single()
+
+          if (userError) throw userError
+
+          setName(userData.name)
+          setUserId(user.id)
+
+          // Check if role matches
+          if (role !== userData.role) {
+            router.push(`/onboarding?role=${userData.role}`)
+            return
+          }
+        } else {
+          // If no user, redirect to login
+          router.push("/access-account")
+          return
         }
-        const data = await response.json()
-        setSemesters(data)
+
+        // Fetch semesters
+        const { data: semestersData, error: semestersError } = await supabase
+          .from("semesters")
+          .select("*")
+          .order("semester_number", { ascending: true })
+
+        if (semestersError) throw semestersError
+        setSemesters(semestersData)
       } catch (err) {
+        console.error("Error fetching data:", err)
         setError(err.message)
         toast({
           title: "Error",
-          description: "Failed to load semesters. Please try again later.",
+          description: "Failed to load user data. Please try again later.",
           variant: "destructive",
         })
       } finally {
@@ -98,28 +118,14 @@ export default function OnboardingPage() {
       }
     }
 
-    fetchSemesters()
-  }, [toast])
-
-  useEffect(() => {
-    const user = sessionStorage.getItem("user")
-    if (user == null) {
-      window.location.href = "/access-account"
-    }
-    const userData = JSON.parse(user)
-    setName(userData.name)
-    setUserId(userData.id)
-
-    if (role != userData.role) {
-      router.push(`/onboarding?role=${userData.role}`)
-    }
-  }, [role, router])
+    fetchData()
+  }, [user, role, router, toast])
 
   const handleCreateGroup = async (e) => {
     e.preventDefault()
 
     // Validate required fields
-    if (!selectedSemester || !selectedSubject || !selectedGroupType) {
+    if (!selectedSemester || !selectedSubject) {
       toast({
         title: "Missing information",
         description: "Please fill in all required fields.",
@@ -132,39 +138,39 @@ export default function OnboardingPage() {
       // Get the subject name from the selected subject ID
       const subjectName = subjectData.find((subject) => subject.id === selectedSubject)?.name
 
-      // Prepare data for API
-      const groupData = {
-        user_id: userId,
-        semester_id: selectedSemester,
-        group_type: selectedGroupType,
-        subject_name: subjectName,
-      }
+      // Get teacher ID
+      const { data: teacherData, error: teacherError } = await supabase
+        .from("teachers")
+        .select("id")
+        .eq("user_id", userId)
+        .single()
 
-      // Send data to API
-      const response = await fetch(`${BACKEND_URL}/api/groups/create`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(groupData),
-      })
+      if (teacherError) throw teacherError
 
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || "Failed to create group")
-      }
+      // Create the group
+      const { data: group, error: groupError } = await supabase
+        .from("groups")
+        .insert({
+          subject_name: subjectName,
+          teacher_id: teacherData.id,
+          semester_id: selectedSemester,
+          group_type: selectedGroupType,
+        })
+        .select()
+        .single()
 
-      const data = await response.json()
+      if (groupError) throw groupError
 
-      // Set the generated join link
-      const fullJoinLink = `${window.location.origin}${data.join_link}`
-      setGeneratedInviteLink(fullJoinLink)
+      // Generate a join link
+      const joinLink = `/join/${group.id}`
+      setGeneratedInviteLink(`${window.location.origin}${joinLink}`)
 
       toast({
         title: "Success",
         description: "Group created successfully!",
       })
     } catch (err) {
+      console.error("Error creating group:", err)
       toast({
         title: "Error",
         description: err.message || "Failed to create group. Please try again.",
@@ -192,19 +198,22 @@ export default function OnboardingPage() {
         throw new Error("Invalid invite link or code")
       }
 
-      // Send join request to API
-      const response = await fetch(`${BACKEND_URL}/api/groups/join/${groupId}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ student_id: userId }),
+      // Get student ID
+      const { data: studentData, error: studentError } = await supabase
+        .from("students")
+        .select("id")
+        .eq("user_id", userId)
+        .single()
+
+      if (studentError) throw studentError
+
+      // Join the group
+      const { error: joinError } = await supabase.from("group_members").insert({
+        group_id: groupId,
+        student_id: studentData.id,
       })
 
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || "Failed to join group")
-      }
+      if (joinError) throw joinError
 
       toast({
         title: "Success",
@@ -214,6 +223,7 @@ export default function OnboardingPage() {
       setJoinGroupOpen(false)
       router.push("/chat")
     } catch (err) {
+      console.error("Error joining group:", err)
       toast({
         title: "Error",
         description: err.message || "Failed to join group. Please check the invite link or code.",
@@ -222,8 +232,47 @@ export default function OnboardingPage() {
     }
   }
 
+  const handleToggleOutOfOffice = async () => {
+    try {
+      const newValue = !outOfOfficeEnabled
+      setOutOfOfficeEnabled(newValue)
+
+      // Update the is_available flag in the users table
+      const { error } = await supabase.from("users").update({ is_available: !newValue }).eq("id", userId)
+
+      if (error) throw error
+
+      toast({
+        title: newValue ? "Out of Office Enabled" : "Out of Office Disabled",
+        description: newValue
+          ? "AI assistant will now respond to student messages"
+          : "You will now receive all student messages directly",
+      })
+    } catch (err) {
+      console.error("Error updating out of office status:", err)
+      toast({
+        title: "Error",
+        description: "Failed to update your status. Please try again.",
+        variant: "destructive",
+      })
+      // Revert the UI state
+      setOutOfOfficeEnabled(!outOfOfficeEnabled)
+    }
+  }
+
   const handleSkip = () => {
-    router.push("/dashboard")
+    router.push("/chat")
+  }
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Loading your profile...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -307,7 +356,7 @@ export default function OnboardingPage() {
                         <Switch
                           id="out-of-office"
                           checked={outOfOfficeEnabled}
-                          onCheckedChange={setOutOfOfficeEnabled}
+                          onCheckedChange={handleToggleOutOfOffice}
                         />
                         <Label htmlFor="out-of-office">{outOfOfficeEnabled ? "Enabled" : "Disabled"}</Label>
                       </div>
@@ -485,10 +534,10 @@ export default function OnboardingPage() {
                   type="button"
                   onClick={() => {
                     setCreateGroupOpen(false)
-                    router.push("/dashboard")
+                    router.push("/chat")
                   }}
                 >
-                  Continue to Dashboard
+                  Continue to Chat
                 </Button>
               )}
             </DialogFooter>
@@ -515,7 +564,7 @@ export default function OnboardingPage() {
                     <Label htmlFor="invite-link">Invite Link</Label>
                     <Input
                       id="invite-link"
-                      placeholder="https://app.classroom.ai/join/..."
+                      placeholder="https://app.nexus.com/join/..."
                       value={inviteLink}
                       onChange={(e) => setInviteLink(e.target.value)}
                       required

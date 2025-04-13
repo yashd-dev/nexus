@@ -1,14 +1,14 @@
-"use client";
+"use client"
 
-import Link from "next/link";
-import { useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { AlertTriangle, Home, RotateCcw } from "lucide-react";
+import Link from "next/link"
+import { useEffect } from "react"
+import { Button } from "@/components/ui/button"
+import { AlertTriangle, Home, RotateCcw } from "lucide-react"
 
 export default function GlobalError({ error, reset }) {
   useEffect(() => {
-    console.error(error);
-  }, [error]);
+    console.error(error)
+  }, [error])
 
   return (
     <html>
@@ -22,13 +22,11 @@ export default function GlobalError({ error, reset }) {
               </div>
             </div>
 
-            <h1 className="text-4xl font-bold tracking-tight mb-2">
-              Something went wrong
-            </h1>
+            <h1 className="text-4xl font-bold tracking-tight mb-2">Something went wrong</h1>
 
             <p className="text-muted-foreground mb-8">
-              We're sorry, but something unexpected happened. Our team has been
-              notified and is working to fix the issue.
+              We're sorry, but something unexpected happened. Our team has been notified and is working to fix the
+              issue.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 w-full">
@@ -47,5 +45,5 @@ export default function GlobalError({ error, reset }) {
         </div>
       </body>
     </html>
-  );
+  )
 }
