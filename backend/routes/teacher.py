@@ -1,6 +1,7 @@
 
 from flask import Blueprint, jsonify, current_app
 teacher_bp = Blueprint("teacher", __name__)
+
 @teacher_bp.route("/groups", methods=["GET"])
 def get_teacher_groups():
     teacher_id = request.args.get("teacher_id")
