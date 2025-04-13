@@ -9,6 +9,7 @@ import {
   Plus,
   Settings,
   Users,
+  LogOut as Logout,
   PowerIcon, // Import a suitable icon for the toggle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -40,6 +41,8 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"; //Imported Tabs for the Group Join Section.
 
 // Dummy subject data (replace with your actual data if needed)
 const subjectData = [
@@ -88,6 +91,8 @@ export function Sidebar({ groups, onGroupSelect }) {
 
   const [isOutOfOffice, setIsOutOfOffice] = useState(false); // State for the toggle
   const [createGroupOpen, setCreateGroupOpen] = useState(false); // State for the create group dialog
+  const [joinGroupOpen, setJoinGroupOpen] = useState(false); //State for join dialog.
+  const [inviteLink, setInviteLink] = useState(""); // invite link/code.
   const [selectedSemester, setSelectedSemester] = useState(""); // State for the selected semester
   const [selectedSubject, setSelectedSubject] = useState(""); // State for the selected subject
   const [selectedGroupType, setSelectedGroupType] = useState(""); // State for the selected group type
@@ -130,6 +135,11 @@ export function Sidebar({ groups, onGroupSelect }) {
       // You can also make an API call to update the backend here if needed
       return newValue;
     });
+  };
+
+  const handleLogout = () => {
+    sessionStorage.clear();
+    router.push("/access-account");
   };
 
   const groupChats = groups.years
@@ -184,7 +194,7 @@ export function Sidebar({ groups, onGroupSelect }) {
       }
 
       const data = await response.json();
-      console.log("Group created successfully:", data);
+      console.log("Group created successfully:", data); //Good practice to log it.
       toast({
         title: "Success",
         description: "Group created successfully!",
@@ -195,6 +205,60 @@ export function Sidebar({ groups, onGroupSelect }) {
       toast({
         title: "Error",
         description: err.message || "Failed to create group. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleJoinGroup = async (e) => {
+    e.preventDefault();
+
+    try {
+      // Extract group ID from the invite link or code
+      let groupId;
+
+      // Simple parsing - in a real app, you'd want more robust parsing
+      if (inviteLink.includes("/join/")) {
+        groupId = inviteLink.split("/join/")[1];
+      } else {
+        // Assume it's a direct group ID
+        groupId = inviteLink;
+      }
+
+      if (!groupId) {
+        throw new Error("Invalid invite link or code");
+      }
+
+      // Send join request to API
+      const response = await fetch(
+        `http://localhost:5000/api/groups/join/${groupId}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ student_id: userId }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to join group");
+      }
+
+      toast({
+        title: "Success",
+        description: "You've joined the group successfully!",
+      });
+
+      setJoinGroupOpen(false);
+      router.push("/chat");
+    } catch (err) {
+      toast({
+        title: "Error",
+        description:
+          err.message ||
+          "Failed to join group. Please check the invite link or code.",
         variant: "destructive",
       });
     }
@@ -221,16 +285,31 @@ export function Sidebar({ groups, onGroupSelect }) {
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-4 w-4 rounded-full"
-                      onClick={() => setCreateGroupOpen(true)} // Open the dialog
-                    >
-                      <Plus className="h-3 w-3" />
-                    </Button>
+                    {userRole === "teacher" ? (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-4 w-4 rounded-full"
+                        onClick={() => setCreateGroupOpen(true)} // Open the dialog
+                      >
+                        <Plus className="h-3 w-3" />
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-4 w-4 rounded-full"
+                        onClick={() => setJoinGroupOpen(true)}
+                      >
+                        <Plus className="h-3 w-3" />
+                      </Button>
+                    )}
                   </TooltipTrigger>
-                  <TooltipContent>Create new group</TooltipContent>
+                  <TooltipContent>
+                    {userRole === "teacher"
+                      ? "Create new group"
+                      : "Join a group"}
+                  </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
             </div>
@@ -314,7 +393,17 @@ export function Sidebar({ groups, onGroupSelect }) {
                   <Users className="h-4 w-4" />
                 </AvatarFallback>
               </Avatar>
-              <span className="text-sm font-medium">{userName}</span>
+              <span className="text-sm font-medium">
+                {userName}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={handleLogout}
+                >
+                  <Logout className="h-4 w-4" />
+                </Button>
+              </span>
             </div>
           </div>
           {/* Out of Office Toggle */}
@@ -329,86 +418,166 @@ export function Sidebar({ groups, onGroupSelect }) {
         </div>
       )}
 
-      {/* Create Group Dialog */}
-      <Dialog open={createGroupOpen} onOpenChange={setCreateGroupOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Create a New Group</DialogTitle>
-            <DialogDescription>
-              Create a classroom group and share the invite link with your
-              students.
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleCreateGroup}>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-4 grid-cols-2">
-                <div className="grid gap-2">
-                  <Label htmlFor="semester">Semester</Label>
-                  <Select
-                    value={selectedSemester}
-                    onValueChange={setSelectedSemester}
-                    required
-                  >
-                    <SelectTrigger id="semester">
-                      <SelectValue placeholder="Select semester" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {semesterData.map((semester) => (
-                        <SelectItem key={semester.id} value={semester.id}>
-                          Semester {semester.semester_number}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="grid gap-2">
-                  <Label htmlFor="group-type">Group Type</Label>
-                  <Select
-                    value={selectedGroupType}
-                    onValueChange={setSelectedGroupType}
-                    required
-                  >
-                    <SelectTrigger id="group-type">
-                      <SelectValue placeholder="Select type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {groupTypes.map((type) => (
-                        <SelectItem key={type.id} value={type.id}>
-                          {type.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="grid gap-2">
-                <Label htmlFor="subject">Subject</Label>
-                <Select
-                  value={selectedSubject}
-                  onValueChange={setSelectedSubject}
-                  required
-                >
-                  <SelectTrigger id="subject">
-                    <SelectValue placeholder="Select subject" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {subjectData.map((subject) => (
-                      <SelectItem key={subject.id} value={subject.id}>
-                        {subject.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+      {userRole === "student" && (
+        <div className="p-4 border-t">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Avatar className="h-8 w-8">
+                <AvatarImage src={userAvatar} alt={userName} />
+                <AvatarFallback>
+                  <Users className="h-4 w-4" />
+                </AvatarFallback>
+              </Avatar>
+              <span className="text-sm font-medium">{userName}</span>
             </div>
-            <DialogFooter>
-              <Button type="submit">Create Group</Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+          </div>
+          {/* Out of Office Toggle */}
+          <div className="flex items-center justify-between mt-2">
+            <span className="text-sm">Log Out</span>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={handleLogout}
+            >
+              <Logout className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Create Group Dialog */}
+      {userRole === "teacher" && (
+        <Dialog open={createGroupOpen} onOpenChange={setCreateGroupOpen}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Create a New Group</DialogTitle>
+              <DialogDescription>
+                Create a classroom group and share the invite link with your
+                students.
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleCreateGroup}>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-4 grid-cols-2">
+                  <div className="grid gap-2">
+                    <Label htmlFor="semester">Semester</Label>
+                    <Select
+                      value={selectedSemester}
+                      onValueChange={setSelectedSemester}
+                      required
+                    >
+                      <SelectTrigger id="semester">
+                        <SelectValue placeholder="Select semester" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {semesterData.map((semester) => (
+                          <SelectItem key={semester.id} value={semester.id}>
+                            Semester {semester.semester_number}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="group-type">Group Type</Label>
+                    <Select
+                      value={selectedGroupType}
+                      onValueChange={setSelectedGroupType}
+                      required
+                    >
+                      <SelectTrigger id="group-type">
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {groupTypes.map((type) => (
+                          <SelectItem key={type.id} value={type.id}>
+                            {type.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="subject">Subject</Label>
+                  <Select
+                    value={selectedSubject}
+                    onValueChange={setSelectedSubject}
+                    required
+                  >
+                    <SelectTrigger id="subject">
+                      <SelectValue placeholder="Select subject" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {subjectData.map((subject) => (
+                        <SelectItem key={subject.id} value={subject.id}>
+                          {subject.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Join Group Dialog (Student Only) */}
+      {userRole === "student" && (
+        <Dialog open={joinGroupOpen} onOpenChange={setJoinGroupOpen}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Join a Group</DialogTitle>
+              <DialogDescription>
+                Enter the invite link or code provided by your teacher.
+              </DialogDescription>
+            </DialogHeader>
+
+            <form onSubmit={handleJoinGroup}>
+              <div className="grid gap-4 py-4">
+                <Tabs defaultValue="link" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="link">Invite Link</TabsTrigger>
+                    <TabsTrigger value="code">Invite Code</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="link" className="mt-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="invite-link">Invite Link</Label>
+                      <Input
+                        id="invite-link"
+                        placeholder="https://app.classroom.ai/join/..."
+                        value={inviteLink}
+                        onChange={(e) => setInviteLink(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </TabsContent>
+                  <TabsContent value="code" className="mt-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="invite-code">Invite Code</Label>
+                      <Input
+                        id="invite-code"
+                        placeholder="Enter group ID"
+                        value={inviteLink}
+                        onChange={(e) => setInviteLink(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </div>
+
+              <DialogFooter>
+                <Button type="submit">Join Group</Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

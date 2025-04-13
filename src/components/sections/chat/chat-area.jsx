@@ -10,6 +10,7 @@ import {
   LinkIcon,
   Info,
   X,
+  AlertTriangle,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,7 @@ export function ChatArea({ selectedGroup }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [uploading, setUploading] = useState(false); // Added uploading state
 
   const router = useRouter(); // Initialize useRouter
 
@@ -60,33 +62,35 @@ export function ChatArea({ selectedGroup }) {
     }
   };
   const handleFileUpload = async (file, groupId, senderId, senderRole) => {
-  try {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('group_id', groupId);
-    formData.append('sender_id', senderId);
-    formData.append('sender_role', senderRole);
+    setUploading(true); // Set uploading to true when file upload starts
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("group_id", groupId);
+      formData.append("sender_id", senderId);
+      formData.append("sender_role", senderRole);
 
-    const res = await fetch('http://localhost:5000/api/gemini/upload', {
-      method: 'POST',
-      body: formData,
-    });
+      const res = await fetch("http://localhost:5000/api/gemini/upload", {
+        method: "POST",
+        body: formData,
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    if (!res.ok) {
-      console.error('Upload failed:', data.error);
-      return { success: false, error: data.error };
+      if (!res.ok) {
+        console.error("Upload failed:", data.error);
+        return { success: false, error: data.error };
+      }
+
+      console.log("✅ Upload successful:", data.message);
+      return { success: true, message: data.message };
+    } catch (err) {
+      console.error("Upload error:", err);
+      return { success: false, error: err.message || "Unknown error occurred" };
+    } finally {
+      setUploading(false); // Set uploading to false whether upload succeeds or fails
     }
-
-    console.log('✅ Upload successful:', data.message);
-    return { success: true, message: data.message };
-  } catch (err) {
-    console.error('Upload error:', err);
-    return { success: false, error: err.message || 'Unknown error occurred' };
-  }
-};
-
+  };
 
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !selectedGroup) return;
@@ -96,6 +100,14 @@ export function ChatArea({ selectedGroup }) {
     const userRole = user["role"];
 
     try {
+      const res = await fetch(
+        `http://localhost:5000/api/messages/fetch/${selectedGroup}`
+      );
+      if (!res.ok) {
+        throw new Error("Failed to fetch messages");
+      }
+      const dat = await res.json();
+      setMessages(dat);
       const response = await fetch("http://localhost:5000/api/messages/send", {
         method: "POST",
         headers: {
@@ -324,6 +336,17 @@ export function ChatArea({ selectedGroup }) {
             <h1 className="font-semibold text-lg leading-tight">
               {selectedGroup.name}
             </h1>
+            {selectedGroup.teachers /* Display only when teachers exist */ &&
+              selectedGroup.teachers.map((teacher) => {
+                return teacher.is_available ? (
+                  /* Is teacher Online */ <CheckCircle className="inline-block w-3 h-3 ml-1 text-green-500" />
+                ) : (
+                  /* AI is being online*/
+
+                  <AlertTriangle className="inline-block w-3 h-3 ml-1 text-red-500" />
+                );
+              })}
+
             {selectedGroup.members_count && (
               <p className="text-xs text-muted-foreground">
                 {selectedGroup.members_count} members
@@ -372,6 +395,7 @@ export function ChatArea({ selectedGroup }) {
 
                   {messageGroups[date].map((message, index) => {
                     const isCurrentUser = message.sender_id === currentUserId;
+                    console.log(message);
                     const showAvatar =
                       index === 0 ||
                       messageGroups[date][index - 1].sender_id !==
@@ -477,36 +501,20 @@ export function ChatArea({ selectedGroup }) {
           {/* Message Input */}
           <div className="p-4 border-t bg-background/95 backdrop-blur-sm">
             <div className="flex gap-2 max-w-3xl mx-auto">
-             <TooltipProvider>
-  <Tooltip>
-    <TooltipTrigger asChild>
-      <label htmlFor="file-upload">
-        <Button
-          variant="outline"
-          size="icon"
-          className="shrink-0 h-16 w-16 cursor-pointer"
-          asChild
-        >
-          <Paperclip className="h-4 w-4" />
-        </Button>
-      </label>
-    </TooltipTrigger>
-    <TooltipContent>Attach File</TooltipContent>
-  </Tooltip>
-  <input
-    type="file"
-    id="file-upload"
-    className="hidden"
-    onChange={(e) => {
-      const file = e.target.files[0];
-      if (file && selectedGroup && currentUserId) {
-        const userRole = user?.role;
-        handleFileUpload(file, selectedGroup.id, currentUserId, userRole);
-      }
-    }}
-  />
-</TooltipProvider>
-
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="shrink-0 h-16 w-16 cursor-pointer"
+                    >
+                      <Paperclip className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Attach File</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
 
               <div className="flex-1 relative">
                 <Input
