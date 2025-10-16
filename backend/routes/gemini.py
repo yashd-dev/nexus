@@ -19,7 +19,7 @@ gemini_bp = Blueprint("gemini", __name__)
 
 def setup_gemini():
     """Sets up Google Gemini API. Returns a generative model."""
-    GEMINI_API_KEY = 'AIzaSyDfoT122mIYJohK9n1X_gXyaLB6uLp0CZg'
+    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
     
     # Ensure the GEMINI_API_KEY is set properly
     if not GEMINI_API_KEY:
